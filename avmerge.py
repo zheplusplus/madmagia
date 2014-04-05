@@ -2,20 +2,23 @@ import os
 import uuid
 import subprocess
 
+from config import config
 import audio_slice
 import video_slice
 import sequence
 
 
 def _merge_sections(sections, source_video_dir, audio_file, output_file):
-    source_files = [os.path.join(source_video_dir, f)
-                    for f in sorted(os.listdir(source_video_dir))]
+    source_files = dict()
+    for fn in os.listdir(source_video_dir):
+        source_files[sequence.epnum(fn)] = os.path.join(source_video_dir, fn)
+
     tmp_name_id = str(uuid.uuid4())
     video_file = video_slice.from_segments(
         source_files, tmp_name_id, sum([sec.segments for sec in sections], []))
 
     p = subprocess.Popen([
-        'mencoder',
+        config['mencoder'],
         '-audiofile', audio_file,
         '-of', 'lavf', '-lavfopts', 'format=mp4',
         '-oac', 'copy', '-ovc', 'x264',
@@ -41,7 +44,7 @@ def _find_sec(sections, sec_name):
 
 
 def _interval_secs(sections, end_sec_name, begin_index, audio_file):
-    if end_sec_name is None:
+    if not end_sec_name:
         try:
             next_sec = sections[begin_index + 1]
             return next_sec.start_time, sections[begin_index: begin_index + 1]

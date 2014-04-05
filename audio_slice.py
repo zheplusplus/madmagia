@@ -2,6 +2,7 @@ import os
 import subprocess
 import re
 
+from config import config
 import pathutil
 import sequence
 
@@ -10,7 +11,7 @@ _DURATION_RE = re.compile('Duration: (?P<h>[0-9]+):(?P<m>[0-9]+):' +
 
 
 def audio_len(f):
-    p = subprocess.Popen(['avconv', '-i', f], stderr=subprocess.PIPE)
+    p = subprocess.Popen([config['avconv'], '-i', f], stderr=subprocess.PIPE)
     dur_match = _DURATION_RE.search(p.stderr.read())
     if dur_match is None:
         raise ValueError('Unsupported audio file')
@@ -25,7 +26,7 @@ def _audio_from_to(input_file, output_dir, name, ext, start_time, end_time):
     if pathutil.isfile(output_path):
         return output_path
     p = subprocess.Popen([
-        'avconv',
+        config['avconv'],
         '-ss', str(start_time),
         '-i', input_file,
         '-t', str(end_time - start_time),

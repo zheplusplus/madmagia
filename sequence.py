@@ -1,6 +1,4 @@
 import re
-import functools
-import collections
 
 
 class ParseError(ValueError):
@@ -18,38 +16,65 @@ class Segment(object):
         self.subt = subt
         self.filters = []
 
-    def add_filter(self, f):
-        self.filters.append(f)
+    def add_filter(self, f, args):
+        self.filters.append((f, args))
 
 
 class Section(object):
-    def __init__(self, start_time, name):
+    def __init__(self, start_time, name, sub=''):
         self.start_time = start_time
         self.name = name
+        self.sub = sub
         self.segments = []
 
     def add(self, segment):
         self.segments.append(segment)
 
+_PREFIX_FLOAT = re.compile(r'(^[0-9]+\.[0-9]+)')
+_PREFIX_INT = re.compile(r'(^[0-9]+)')
+
+
+def epnum(fn):
+    mat = _PREFIX_FLOAT.match(fn)
+    if mat is not None:
+        return float(mat.groups()[0])
+    mat = _PREFIX_INT.match(fn)
+    if mat is not None:
+        return int(mat.groups()[0])
+    raise ValueError('Unable to find index pattern of filename: ' + fn)
+
 
 _ctrls = dict()
+
 
 def _ctrl(f):
     _ctrls[f.__name__[1:]] = f
     return f
 
 
+def _get_last_segment(i, arg, sections):
+    try:
+        return sections[-1].segments[-1]
+    except IndexError:
+        raise ParseError('No segment before filter', i, arg)
+
+
 def _decl_filter(f):
-    def g(i, arg, sections, section_names):
-        try:
-            last_segment = sections[-1].segments[-1]
-        except IndexError:
-            raise ParseError('No segment before filter', i, arg)
-        last_segment.add_filter(f)
+    def g(i, arg, sections, _):
+        _get_last_segment(i, arg, sections).add_filter(f, None)
     _ctrls[f] = g
 
 _decl_filter('repeatframe')
 _decl_filter('hflip')
+
+
+@_ctrl
+def _fillspan(i, arg, sections, _):
+    try:
+        duration = float(filter(None, arg.split(' '))[0])
+    except (IndexError, ValueError):
+        raise ParseError('Invalid span duration', i, arg)
+    _get_last_segment(i, arg, sections).add_filter('fillspan', duration)
 
 _SECTION_TIME_PATTERN = re.compile(
     r'^((?P<min>[0-9]+):)?(?P<sec>[0-9]+)(?P<mil>\.[0-9]{1,3})?$')
@@ -81,23 +106,25 @@ def _section(i, arg, sections, section_names):
         raise ParseError('Duplicated section name', i, name)
     section_names.add(name)
 
-    sections.append(Section(start_time, name))
+    sections.append(Section(start_time, name, name))
 
 
 def _segment(line):
     parts = filter(None, line.split(' '))
     if len(parts) == 3:
-        epnum, start, dur = parts
+        epn, start, dur = parts
         subt = None
     else:
-        epnum, start, dur, subt = parts
+        epn, start, dur, subt = parts
     start_time = parse_time(start)
-    return Segment(int(epnum), start_time, float(dur), subt)
+    if start_time is None:
+        raise ValueError('invalid start time:' + start)
+    return Segment(epnum(epn), start_time, float(dur), subt)
 
 
 def parse(sequence):
     total_dur = 0
-    sections = [Section(.0, ':begin')]
+    sections = [Section(0, ':begin')]
     section_names = set()
 
     for i, line in enumerate(sequence):
@@ -117,8 +144,8 @@ def parse(sequence):
 
         try:
             segment = _segment(line)
-        except (LookupError, ValueError):
-            raise ParseError('Invalid segment', i, line)
+        except (LookupError, ValueError), e:
+            raise ParseError('Invalid segment:' + e.message, i, line)
         total_dur += segment.duration
         sections[-1].add(segment)
     return sections, total_dur
