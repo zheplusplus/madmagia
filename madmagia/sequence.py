@@ -21,8 +21,8 @@ class Segment(object):
 
 
 class Section(object):
-    def __init__(self, start_time, name, sub=''):
-        self.start_time = start_time
+    def __init__(self, start, name, sub=''):
+        self.start = start
         self.name = name
         self.sub = sub
         self.segments = []
@@ -92,21 +92,25 @@ def parse_time(time_str):
 
 @_ctrl
 def _section(i, arg, sections, section_names):
-    space = arg.find(' ')
-    if space == -1:
+    args = [x.strip() for x in filter(None, arg.split(' '))]
+    if len(args) == 1:
         raise ParseError('Invalid section format', i, arg)
-    start_time = parse_time(arg[:space])
-    if start_time is None:
-        raise ParseError('Invalid section time format', i, arg[:space])
 
-    name = arg[space + 1:].strip()
-    if '-' in name or ':' in name:
-        raise ParseError('Invalid section name', i, name)
-    if name in section_names:
-        raise ParseError('Duplicated section name', i, name)
-    section_names.add(name)
+    start = parse_time(args[0])
+    if start is None:
+        raise ParseError('Invalid section time format', i, args[0])
 
-    sections.append(Section(start_time, name, name))
+    name = ''
+    if 2 <= len(args):
+        name = args[1]
+        if ':' in name:
+            raise ParseError('Invalid section name', i, name)
+        if name in section_names:
+            raise ParseError('Duplicated section name', i, name)
+        section_names.add(name)
+
+    sub = ' '.join(args[2:])
+    sections.append(Section(start, name, sub))
 
 
 def _segment(line):
@@ -116,10 +120,10 @@ def _segment(line):
         subt = None
     else:
         epn, start, dur, subt = parts
-    start_time = parse_time(start)
-    if start_time is None:
+    start = parse_time(start)
+    if start is None:
         raise ValueError('invalid start time:' + start)
-    return Segment(epnum(epn), start_time, float(dur), subt)
+    return Segment(epnum(epn), start, float(dur), subt)
 
 
 def parse(sequence):
