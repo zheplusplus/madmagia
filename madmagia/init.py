@@ -1,8 +1,7 @@
 import sys
 import os.path
 
-DEFAULT_CONFIG = '''
-[input]
+DEFAULT_CONFIG = '''[input]
 video_dir=
 bgm=
 sequence=./sequence.txt
@@ -13,8 +12,8 @@ display=display
 [output]
 resolution=1280:720
 bitrate=1.6M
-fps=24
-vcodec=copy
+fps=30
+vcodec=mpeg4
 '''
 
 DEFAULT_SEQUENCE = '''

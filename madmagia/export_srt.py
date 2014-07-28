@@ -7,27 +7,48 @@ import video_slice
 import audio_slice
 
 
-def format_time(t):
+def _time_srt(t):
     seconds = int(t)
     millis = int(1000 * (t - seconds))
     return ''.join([str(seconds / 3600), ':', str(seconds % 3600 / 60), ':',
                     str(seconds % 60), ',', str(millis)])
 
 
-def echo_section(i, section, end_time):
+def _echo_srt(i, section, _, end_time):
     if section.sub:
         print i
-        print format_time(section.start), '-->', format_time(end_time)
+        print _time_srt(section.start), '-->', _time_srt(end_time)
         print section.sub.replace('\\n', '\n')
         print ''
 
 
-def main():
+def _output(echo):
     with open(config['sequence'], 'r') as f:
         sections, total_dur = sequence.parse(f.readlines())
     if len(sections) == 0:
         raise ValueError('no sections')
     for i, s in enumerate(sections[:-1]):
-        echo_section(i + 1, s, sections[i + 1].start)
-    echo_section(len(sections), sections[-1],
-                 audio_slice.audio_len(config['bgm']))
+        echo(i + 1, s, sections[i + 1], sections[i + 1].start)
+    echo(len(sections), sections[-1], None,
+         audio_slice.audio_len(config['bgm']))
+
+
+def srt():
+    _output(_echo_srt)
+
+
+def _time_lrc(t):
+    seconds = int(t)
+    millis = t - seconds
+    return '[%02d:%05.2f]' % (seconds % 3600 / 60, seconds % 60 + millis)
+
+
+def _echo_lrc(i, section, next_section, end_time):
+    if section.sub:
+        print _time_lrc(section.start), section.sub.replace('\\n', ' ')
+        if next_section and not next_section.sub:
+            print _time_lrc(next_section.start)
+
+
+def lrc():
+    _output(_echo_lrc)

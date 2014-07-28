@@ -33,6 +33,8 @@ def _init_config():
     with open(conf_file, 'r') as conf_file:
         c = ConfigParser.ConfigParser()
         c.readfp(conf_file)
+        if not _get_config(c, 'input', 'video_dir'):
+            raise ValueError('video_dir not specified')
         video_dir = pathutil.fullpath(_get_config(c, 'input', 'video_dir'))
         return {
             'video_dir': video_dir,

@@ -5,7 +5,7 @@ _URI = 'https://github.com/neuront/madmagia'
 
 setup(
     name='madmagia',
-    version='0.8.1',
+    version='0.9.0',
     author='Neuron Teckid',
     author_email='lene13@gmail.com',
     license='MIT',
@@ -22,7 +22,8 @@ setup(
             'madslice=madmagia.partial:slice',
             'madinspect=madmagia.partial:inspect',
             'madexport=madmagia.partial:export',
-            'madsrt=madmagia.export_srt:main',
+            'madsrt=madmagia.export_srt:srt',
+            'madlrc=madmagia.export_srt:lrc',
             'madframe=madmagia.view_frame:main',
         ],
     ),
