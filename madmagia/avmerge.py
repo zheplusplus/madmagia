@@ -14,13 +14,13 @@ def _merge_sections(sections, audio_file):
     video_file = video_slice.merge_segments(slice_partial(sections))
 
     logger.info('Zip video and audio')
+    shell.rm(OUTPUT_FILE)
     p = shell.execute(
-        config['mencoder'],
-        '-audiofile', audio_file,
-        '-of', 'lavf', '-lavfopts', 'format=mp4',
-        '-oac', 'copy', '-ovc', 'x264',
-        '-o', OUTPUT_FILE,
-        video_file)
+        config['avconv'],
+        '-i', audio_file,
+        '-i', video_file,
+        '-c', 'copy',
+        OUTPUT_FILE)
     if p.returncode != 0:
         raise ValueError('fail')
 

@@ -5,7 +5,7 @@ _URI = 'https://github.com/neuront/madmagia'
 
 setup(
     name='madmagia',
-    version='0.9.0',
+    version='0.9.1',
     author='Neuron Teckid',
     author_email='lene13@gmail.com',
     license='MIT',

@@ -8,6 +8,7 @@ import shell
 _vfilters = dict()
 VIDEO_OUTPUT_DIR = pathutil.fullpath(os.path.join('output', 'video'))
 FRAME_OUTPUT_DIR = pathutil.fullpath(os.path.join('output', 'frame'))
+MERGED_VIDEO = os.path.join(VIDEO_OUTPUT_DIR, 'merged.mp4')
 
 
 def _vfilter(f):
@@ -28,7 +29,6 @@ def _repeatframe(i, seg, inp, args):
         '-loop', '1',
         '-i', image,
         '-vcodec', config['vcodec'],
-        '-tune', 'stillimage',
         '-t', str(seg.duration),
         '-vf', 'scale=' + config['resolution'],
         '-b:v', config['bitrate'],
@@ -158,14 +158,14 @@ def slice_segments(source_files, segments):
 def merge_segments(files):
     if len(files) == 0:
         raise ValueError('no segments')
-    output_video = os.path.join(VIDEO_OUTPUT_DIR, 'merged.mp4')
-    logger.info('Merging segments to %s (might take several minutes)',
-                output_video)
+    logger.info('Merging segments to %s (may take several minutes)',
+                MERGED_VIDEO)
+    shell.rm(MERGED_VIDEO)
     p = shell.execute(
         config['mencoder'],
-        '-ovc', 'x264',
-        '-o', output_video,
+        '-ovc', 'copy',
+        '-o', MERGED_VIDEO,
         *files)
     if p.returncode != 0:
         raise ValueError('fail\n' + p.stderr)
-    return output_video
+    return MERGED_VIDEO

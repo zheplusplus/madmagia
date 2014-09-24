@@ -31,9 +31,11 @@ def _audio_from_to(input_file, name, ext, start, end):
         '-ss', str(start),
         '-i', input_file,
         '-t', str(end - start),
+        '-acodec', 'copy',
         output_path)
     if p.returncode != 0:
-        raise ValueError('Process fail at section')
+        raise ValueError('Fail to produce audio %f-%f:\n%s' %
+                         (start, end, p.stderr))
     return output_path
 
 

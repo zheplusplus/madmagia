@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 
@@ -19,3 +20,8 @@ def execute(*args):
     p = Process(*args)
     p.execute()
     return p
+
+
+def rm(f):
+    if os.path.exists(f):
+        os.remove(f)
