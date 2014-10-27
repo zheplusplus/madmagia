@@ -120,10 +120,10 @@ def _segment(line):
         subt = None
     else:
         epn, start, dur, subt = parts
-    start = parse_time(start)
-    if start is None:
+    start_time = parse_time(start)
+    if start_time is None:
         raise ValueError('invalid start time:' + start)
-    return Segment(epnum(epn), start, float(dur), subt)
+    return Segment(epnum(epn), start_time, float(dur), subt)
 
 
 def parse(sequence):
@@ -140,7 +140,7 @@ def parse(sequence):
             space = line[1:].find(' ')
             if space == -1:
                 space = len(line)
-            ctrl = line[1:space + 1]
+            ctrl = line[1:space + 1].lower()
             if ctrl not in _ctrls:
                 raise ParseError('Unknown control', i, ctrl)
             _ctrls[ctrl](i, line[space + 2:].strip(), sections, section_names)

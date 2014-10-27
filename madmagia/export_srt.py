@@ -27,6 +27,22 @@ def _output(echo):
         sections, total_dur = sequence.parse(f.readlines())
     if len(sections) == 0:
         raise ValueError('no sections')
+
+    time_off = 0
+    i = 0
+    if len(sys.argv) == 2:
+        sec_name = sys.argv[1]
+        for i, s in enumerate(sections):
+            if sec_name == s.name:
+                time_off = s.start
+                break
+        else:
+            raise ValueError('no such section %s' % sec_name)
+
+        sections = sections[i:]
+        for s in sections:
+            s.start -= time_off
+
     for i, s in enumerate(sections[:-1]):
         echo(i + 1, s, sections[i + 1], sections[i + 1].start)
     echo(len(sections), sections[-1], None,

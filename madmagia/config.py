@@ -2,6 +2,8 @@ import os
 import sys
 import logging
 import ConfigParser
+import tempfile
+from datetime import datetime
 
 import pathutil
 import sequence
@@ -14,17 +16,36 @@ def _get_config(c, sec, opt, default=''):
         return default
 
 
-def _input_videos(video_dir):
+def _is_video(f, postfix):
+    for p in postfix:
+        if f.endswith(p):
+            return True
+    return False
+
+
+def _input_videos(video_dir, postfix):
+    postfix = filter(None, postfix)
     return {sequence.epnum(f): os.path.join(video_dir, f)
-            for f in os.listdir(video_dir)}
+            for f in os.listdir(video_dir) if _is_video(f, postfix)}
 
 
-def _logger():
+def _logger(c):
+    try:
+        level = getattr(logging, _get_config(
+            c, 'logging', 'level', 'info').upper())
+    except (AttributeError, ValueError):
+        raise ValueError('Invalid logging level: %s' % level_rep)
     logger = logging.getLogger('madmagia')
-    logger.setLevel(logging.DEBUG)
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setLevel(logging.DEBUG)
+    logger.setLevel(level)
+
+    logfile = _get_config(c, 'logging', 'file', None)
+    if not logfile:
+        logfile = os.path.join(tempfile.gettempdir(),
+                               datetime.now().strftime('mmtmp_%Y-%m-%d.log'))
+    handler = logging.FileHandler(logfile)
     logger.addHandler(handler)
+    handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+    logging.debug('Logging to %s', logfile)
     return logger
 
 
@@ -38,7 +59,9 @@ def _init_config():
         video_dir = pathutil.fullpath(_get_config(c, 'input', 'video_dir'))
         return {
             'video_dir': video_dir,
-            'input_videos': _input_videos(video_dir),
+            'input_videos': _input_videos(
+                video_dir, _get_config(c, 'input', 'video_postfix',
+                                       'mov,mkv,mp4,avi,rm,rmvb').split(',')),
             'bgm': pathutil.fullpath(_get_config(c, 'input', 'bgm')),
             'sequence': pathutil.fullpath(_get_config(c, 'input', 'sequence')),
             'avconv': _get_config(c, 'exec', 'avconv'),
@@ -48,6 +71,9 @@ def _init_config():
             'bitrate': _get_config(c, 'output', 'bitrate', '1.6M'),
             'fps': _get_config(c, 'output', 'fps', '24'),
             'vcodec': _get_config(c, 'output', 'vcodec', 'copy'),
-        }, _logger()
+        }, _logger(c)
 
 config, logger = _init_config()
+logger.debug('Videos ep map:')
+for ep, f in config['input_videos'].iteritems():
+    logger.debug('  %s: %s' % (ep, f))

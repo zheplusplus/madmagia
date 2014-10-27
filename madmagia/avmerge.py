@@ -14,7 +14,7 @@ def _merge_sections(sections, audio_file):
     video_file = video_slice.merge_segments(slice_partial(sections))
 
     logger.info('Zip video and audio')
-    shell.rm(OUTPUT_FILE)
+    pathutil.rm(OUTPUT_FILE)
     p = shell.execute(
         config['avconv'],
         '-i', audio_file,

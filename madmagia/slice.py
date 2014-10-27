@@ -43,6 +43,7 @@ def inspect():
     except sequence.ParseError, e:
         traceback.print_exc()
         print >> sys.stderr, e.linenum, ':', e.message, ':', e.content
+        return
 
     def next_section(sec_index, seg_index, expected_len, actual_len):
         sec = sections[sec_index]

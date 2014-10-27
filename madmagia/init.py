@@ -1,8 +1,11 @@
 import sys
 import os.path
 
+import pathutil
+
 DEFAULT_CONFIG = '''[input]
 video_dir=
+video_postfix=mov,mkv,mp4,avi,rm,rmvb
 bgm=
 sequence=./sequence.txt
 [exec]
@@ -14,10 +17,11 @@ resolution=1280:720
 bitrate=1.6M
 fps=30
 vcodec=mpeg4
+[logging]
+level=info
 '''
 
-DEFAULT_SEQUENCE = '''
-# Sequence example file
+DEFAULT_SEQUENCE = '''# Sequence example file
 # Lines started with # will be ignored
 
 # Section example
@@ -57,3 +61,7 @@ def main():
         f.write(DEFAULT_CONFIG)
     with open('sequence.txt', 'w') as f:
         f.write(DEFAULT_SEQUENCE)
+
+
+def clean():
+    pathutil.rm_all('output/video')

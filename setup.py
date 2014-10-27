@@ -19,9 +19,10 @@ setup(
     entry_points=dict(
         console_scripts=[
             'madinit=madmagia.init:main',
-            'madslice=madmagia.partial:slice',
-            'madinspect=madmagia.partial:inspect',
-            'madexport=madmagia.partial:export',
+            'madclean=madmagia.init:clean',
+            'madslice=madmagia.slice:slice',
+            'madinspect=madmagia.slice:inspect',
+            'madexport=madmagia.slice:export',
             'madsrt=madmagia.export_srt:srt',
             'madlrc=madmagia.export_srt:lrc',
             'madframe=madmagia.view_frame:main',

@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 
 
@@ -10,18 +11,18 @@ class Process(object):
         self.returncode = None
 
     def execute(self):
-        p = subprocess.Popen(self.args, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-        self.stdout, self.stderr = p.communicate()
-        self.returncode = p.returncode
+        try:
+            p = subprocess.Popen(self.args, stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+            self.stdout, self.stderr = p.communicate()
+            self.returncode = p.returncode
+        except OSError:
+            print >> sys.stderr, 'Error on executing:'
+            print >> sys.stderr, ''.join(self.args)
+            raise
 
 
 def execute(*args):
     p = Process(*args)
     p.execute()
     return p
-
-
-def rm(f):
-    if os.path.exists(f):
-        os.remove(f)

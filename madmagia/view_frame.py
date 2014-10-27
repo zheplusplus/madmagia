@@ -16,7 +16,10 @@ def main():
         epnum = sequence.epnum(sys.argv[1])
     except (ValueError, LookupError):
         raise ValueError('no such episode ' + sys.argv[1])
-    imgf = video_slice.save_frame(sequence.parse_time(sys.argv[2]), epnum)
+    time = sequence.parse_time(sys.argv[2])
+    if time is None:
+        raise ValueError('Invalid time format')
+    imgf = video_slice.save_frame(time, epnum)
     if imgf is None:
         raise ValueError('Fail to extract frame')
     subprocess.Popen([config['display'], imgf])
