@@ -5,7 +5,8 @@ import subprocess
 
 class Process(object):
     def __init__(self, *args):
-        self.args = args
+        self.args = [a.encode('utf-8') if isinstance(a, unicode) else a
+                     for a in args]
         self.stdout = None
         self.stderr = None
         self.returncode = None
@@ -18,7 +19,7 @@ class Process(object):
             self.returncode = p.returncode
         except OSError:
             print >> sys.stderr, 'Error on executing:'
-            print >> sys.stderr, ''.join(self.args)
+            print >> sys.stderr, ' '.join(self.args)
             raise
 
 

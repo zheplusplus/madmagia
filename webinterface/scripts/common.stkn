@@ -1,0 +1,118 @@
+_t_: mad.gettext
+
+PATH_SPLIT: *RegExp('[\\\\|/]')
+
+func createOverlapPanel()
+    bg: jQuery('<div>').addClass('overlay')
+    panel: jQuery('<div>').addClass('overlay-panel')
+    jQuery(document.body).append(bg).append(panel)
+    panel.quit: ():
+        bg.remove()
+        panel.remove()
+    return panel
+
+func selectDiskObj(initPath, dirOnly, cb)
+    panel: createOverlapPanel()
+    pathList: jQuery('<ol>').addClass('breadcrumb').css({float: 'left'})
+    pathList.currentPaths: []
+    panel.append(pathList)
+    panel.append(mad.createButton('X').click(quit).addClass('btn-danger').css({float: 'right'}))
+
+    if dirOnly
+        panel.append(mad.createPriButton(_t_('select_current_dir')).click(select).css({float: 'right', 'margin-right': 6}))
+
+    panel.append(mad.createCentralPara(_t_('hint_ctrl_f_file')).css({clear: 'both'}))
+
+    newdirInput: jQuery('<input>')
+    newdirBtn: mad.createButton(_t_('mkdir')).click(():
+        if pathList.currentPaths.length = 0 || newdirInput.val().length = 0
+            return
+        paths: pathList.currentPaths ++ [newdirInput.val()]
+        jQuery.post('/mkdir', {path: (paths).join('/')}, ():
+            usePaths(paths)
+            newdirInput.val('')
+        )
+    )
+    panel.append(mad.createCentralPara('').append(newdirInput).append(newdirBtn))
+
+    fileArea: jQuery('<div>')
+    panel.append(fileArea)
+
+    func quit()
+        panel.quit()
+
+    func select()
+        quit()
+        cb(pathList.currentPaths.join('/'))
+
+    func usePaths(paths)
+        pathList.html('')
+        fileArea.html('')
+        pathList.append(jQuery('<li>').append(
+            jQuery('<a>').text('//').click((): usePaths([]))))
+        paths |:
+            index: $i + 1
+            pathList.append(jQuery('<li>').append(
+                jQuery('<a>').text($).click((): usePaths(paths[, index]))))
+        lsdir(paths, dirOnly, %files)
+        pathList.currentPaths: paths
+        files |:
+            paths: $.path.split(PATH_SPLIT)
+            type: $.type
+            btn: mad.createButton(paths[paths.length - 1]).
+                     addClass('file-btn').
+                     click(():
+                         if type = 'f'
+                            pathList.currentPaths: paths
+                            return select()
+                         usePaths(paths)
+                     )
+            if type = 'd'
+                btn.addClass('btn-primary')
+            fileArea.append(btn)
+
+    usePaths(initPath.split(PATH_SPLIT))
+
+func lsdir(paths, dirOnly, cb)
+    jQuery.get('/ls/', {path: paths.join('/'), dirOnly: 1 if dirOnly else 0}, %r)
+    cb(r)
+
+export mad.createButton: (text): jQuery('<button>').addClass('btn').text(text)
+export mad.createPriButton: (text): mad.createButton(text).addClass('btn-primary')
+
+export mad.createCentralPara: (text): jQuery('<p>').css('text-align', 'center').text(text)
+
+export mad.selectFile: (initPath, cb): selectDiskObj(initPath, false, cb)
+export mad.selectDir: (initPath, cb): selectDiskObj(initPath, true, cb)
+export mad.selectFileFor: (dom): selectDiskObj(dom.val(), false, (r): dom.val(r))
+export mad.selectDirFor: (dom): selectDiskObj(dom.val(), true, (r): dom.val(r))
+
+export mad.createOverlapPanel: createOverlapPanel
+
+export mad.parseTime: (time):
+    hms: time.split(':')
+    if hms.length = 1
+        return parseFloat(hms[0])
+    if hms.length = 2
+        return parseInt(hms[0]) * 60 + parseFloat(hms[1])
+    if hms.length = 3
+        return parseInt(hms[0]) * (60 * 60) + parseInt(hms[1]) * 60 + parseFloat(hms[2])
+    return NaN
+export mad.formatTime: (num):
+    t: Math.round(num * 1000)
+    ms: t % 1000
+    s: Math.floor(t / 1000) % 60
+    m: Math.floor(t / (60 * 1000)) % 60
+    h: Math.floor(t / (60 * 60 * 1000))
+
+    r: [h, ':']
+    if m < 10
+        r.push('0')
+    r.push(m)
+    r.push(':')
+    if s < 10
+        r.push('0')
+    r.push(s)
+    r.push('.')
+    r.push(ms)
+    return r.join('')

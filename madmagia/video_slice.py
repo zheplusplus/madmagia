@@ -77,8 +77,12 @@ def _fillspan(i, seg, inp, span_dur):
 
 
 def save_frame(time, epnum):
-    source_file = config['input_videos'][epnum]
-    output_file = os.path.join(FRAME_OUTPUT_DIR, '%s_%f.png' % (epnum, time))
+    return save_frame_to(
+        time, config['input_videos'][epnum],
+        os.path.join(FRAME_OUTPUT_DIR, '%s_%f.png' % (epnum, time)))
+
+
+def save_frame_to(time, source_file, output_file):
     if os.path.exists(output_file):
         return output_file
     p = shell.execute(

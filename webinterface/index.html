@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>Mad Magia 控制台</title>
+<script src='/static/jquery.js'></script>
+<script src='/static/bootstrap-all.js'></script>
+<link href='/static/bootstrap-all.css' rel='stylesheet'>
+<script src='/static/output/js/madmagia.js'></script>
+<style>
+* {
+    font-family: sans-serif;
+}
+
+#myTab, #myTabContent {
+    width: 800px;
+    margin: auto;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    filter: alpha(opacity=50);
+    -moz-opacity:0.5;
+    -khtml-opacity: 0.5;
+    opacity: 0.5;
+}
+
+.overlay-panel {
+    position: fixed;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    height: 80%;
+    background-color: white;
+    overflow: scroll;
+}
+
+.overlay-panel .file-btn {
+    display: inline-block;
+    width: 180px;
+    margin-right: 20px;
+    margin-left: 5px;
+    min-height: 40px;
+}
+
+.mm-section {
+    border: 1px #021 solid;
+    margin: 4px;
+    min-height: 48px;
+    width: 580px;
+    max-width: 580px;
+    margin-bottom: 4px;
+    margin-top: 4px;
+    padding-bottom: 6px;
+}
+
+.mm-sec-name {
+    font-size: 1.2em;
+    min-width: 240px;
+    float: left;
+    margin: 6px;
+}
+
+.mm-sec-start {
+    font-size: 1.2em;
+    width: 120px;
+    float: left;
+    margin: 6px;
+}
+
+.ws-add-segment {
+    margin-left: 80px;
+    display: none;
+}
+
+.in-edit .ws-add-segment {
+    display: inline-block;
+}
+
+.mm-segment {
+    margin-left: 32px;
+    margin-right: 6px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+
+    border-left: 2px gray solid;
+    background-color: #bbb;
+}
+
+.in-edit .mm-segment {
+    border-left-color: green;
+    background-color: #cdc;
+
+    cursor: pointer;
+}
+
+.in-edit .mm-segment:hover {
+    background-color: #efe;
+}
+
+.mm-seg-el {
+    display: inline-block;
+    margin: 6px;
+    min-width: 80px;
+}
+
+.mm-seg-filter {
+    margin-left: 40px;
+}
+
+p, span {
+    word-wrap: break-word;
+}
+</style>
+</head>
+<body>
+
+<ul id='myTab' class='nav nav-tabs' role='tablist'>
+  <li role='presentation' class='active'><a href='#projs' id='projs-tab' role='tab' data-toggle='tab' aria-controls='projs' aria-expanded='true'>视频项目</a></li>
+  <li role='presentation'><a href='#workspace' role='tab' id='workspace-tab' data-toggle='tab' aria-controls='workspace'>剪辑片段</a></li>
+</ul>
+
+<div id='myTabContent' class='tab-content'>
+  <div role='tabpanel' class='tab-pane fade in active' id='projs' aria-labelledBy='projs-tab'>
+    <p id='projs-loading'>正在加载已有项目...</p>
+    <div id='projs-list'></div>
+  </div>
+  <div role='tabpanel' class='tab-pane fade' id='workspace' aria-labelledBy='workspace-tab'>
+    <p id='ws-placeholder'>你需要先在 '视频项目' 面板中选定一个项目</p>
+    <p id='ws-projname' style='text-align: center'></p>
+    <table style='display: none; width: 100%' id='ws-panel'>
+      <tr>
+        <td id='ws-segs' style='width: 600px; vertical-align: top'></td>
+        <td id='ws-action' style='max-width: 200px; width: 200px; vertical-align: top'>
+          <button class='btn btn-primary input-block-level collapse-trigger'>
+            音频信息
+          </button>
+          <div>
+            <p id='ws-audio-path'></p>
+            音频时长 <span id='ws-audio-len'></span>
+          </div>
+
+          <button class='btn btn-primary input-block-level collapse-trigger'>
+            视频信息
+          </button>
+          <div>
+            视频目录 <span id='ws-video-path'></span>
+          </div>
+
+          <button id='save-workspace' onclick='mad.workspace.save()' class='btn btn-primary'>保存</button>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<div id='edit-segment-panel' style='display: none'>
+    <h1 style='float: left; margin-left: 6px'>片段规格设置</h1>
+    <div style='float: right'><button id='edit-segment-quit' class='btn btn-danger'>X</button></div>
+    <div style='clear: both'></div>
+    <table style='width: 280px; max-width: 280px; margin: 6px; float: left'>
+        <tr>
+            <td>所在话数</td>
+            <td><select id='edit-segment-epnum-selector' class='input-block-level'></select></td>
+        </tr>
+        <tr>
+            <td>开始时间</td>
+            <td><input id='edit-segment-start' class='input-block-level'></td>
+        </tr>
+        <tr>
+            <td>截取长度</td>
+            <td><input id='edit-segment-duration' class='input-block-level'></td>
+        </tr>
+        <tr>
+            <td id='edit-segment-filters-cell' colspan='2' style='text-align: center;'>
+                <label class='input-block-level'>
+                    <input type='checkbox' id='edit-segment-repeatframe-cb'>
+                    <span>单画面定格</span>
+                </label>
+                <label class='input-block-level'>
+                    <input type='checkbox' id='edit-segment-hflip-cb'>
+                    <span>水平翻转</span>
+                </label>
+                <label class='input-block-level'>
+                    <input type='checkbox' id='edit-segment-fillspan-cb'>
+                    <span>拉伸/压缩视频长度至</span>
+                </label>
+                <input class='input-block-level' id='edit-segment-fillspan-in'>
+            </td>
+        </tr>
+        <tr>
+            <td colspan='2'>
+                <button class='btn btn-primary input-block-level' id='edit-segment-confirm'>确定</button>
+                <p id='edit-error-feedback' style='color: red'></p>
+            </td>
+        </tr>
+    </table>
+    <div style='float: left; width: 200px; max-width: 200px'>
+        <img id='edit-segment-frame-viewer'>
+    </div>
+</div>

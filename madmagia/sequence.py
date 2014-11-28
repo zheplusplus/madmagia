@@ -1,5 +1,7 @@
 import re
 
+import files
+
 
 class ParseError(ValueError):
     def __init__(self, message, linenum, content):
@@ -29,20 +31,6 @@ class Section(object):
 
     def add(self, segment):
         self.segments.append(segment)
-
-_PREFIX_FLOAT = re.compile(r'(^[0-9]+\.[0-9]+)')
-_PREFIX_INT = re.compile(r'(^[0-9]+)')
-
-
-def epnum(fn):
-    mat = _PREFIX_FLOAT.match(fn)
-    if mat is not None:
-        return float(mat.groups()[0])
-    mat = _PREFIX_INT.match(fn)
-    if mat is not None:
-        return int(mat.groups()[0])
-    raise ValueError('Unable to find index pattern of filename: ' + fn)
-
 
 _ctrls = dict()
 
@@ -123,7 +111,7 @@ def _segment(line):
     start_time = parse_time(start)
     if start_time is None:
         raise ValueError('invalid start time:' + start)
-    return Segment(epnum(epn), start_time, float(dur), subt)
+    return Segment(files.epnum(epn), start_time, float(dur), subt)
 
 
 def parse(sequence):

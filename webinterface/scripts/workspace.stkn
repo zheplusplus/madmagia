@@ -1,0 +1,146 @@
+_t_: mad.gettext
+
+FILTERS_DISPLAY: {
+    hflip: (): [],
+    repeatframe: (): [],
+    fillspan: (time): [parseFloat(time)],
+}
+
+func getAVLen(path, %%)
+    jQuery.get('/info/len/', {path: path}, %r)
+    return r
+
+func getVideoMap(path, %%)
+    jQuery.get('/info/videols/', {path: path}, %r)
+    return r
+
+func getSequence(path, %%)
+    jQuery.get('/seqc/get/', {path: path}, %r)
+    return r
+
+func newSegment(epnum, start, duration, filters, parent)
+    epnumTag: jQuery('<span>').addClass('mm-seg-el')
+    startTag: jQuery('<span>').addClass('mm-seg-el')
+    durationTag: jQuery('<span>').addClass('mm-seg-el')
+    filtersArea: jQuery('<div>')
+
+    div: jQuery('<div>').addClass('mm-segment').
+                         append(epnumTag).
+                         append(startTag).
+                         append(durationTag).
+                         append(filtersArea).
+                         click(():
+                             if !jQuery(parent).hasClass('in-edit')
+                                return
+                             mad.edit.editSegment(@, findSourceByEpnum(@epnum), proj.getOutputPath(), %s)
+                             if s
+                                 set(s.epnum, s.start, s.duration, s.filters)
+                         )[0]
+
+    func set(epnum, start, duration, filters)
+        div.epnum: epnum
+        epnumTag.text(epnum)
+        div.start: start
+        startTag.text(mad.formatTime(start))
+        div.duration: duration
+        durationTag.text(duration)
+        div.filters: filters
+        filtersArea.html('').append(filters |:
+            fd: FILTERS_DISPLAY[$[0]]
+            if fd
+                $result.push((name, args):
+                    f: jQuery('<div>').addClass('mm-seg-filter').append(
+                        jQuery('<span>').addClass('mm-seg-el').
+                                         text(_t_('seg_filter_' + name)))
+                    fd(args) |: f.append(jQuery('<span>').addClass('mm-seg-el').text($))
+                    return f
+                ($[0], $[1]))
+        )
+
+    set(epnum, start, duration, filters)
+    return div
+
+func newSection(name, start)
+    func addSegmentButton()
+        btn: mad.createPriButton(_t_('new_segment')).addClass('ws-add-segment')
+        btn.click(():
+            mad.edit.createSegment(findSourceByEpnum(@epnum), proj.getOutputPath(), %s)
+            if s
+                div.addSegment(newSegment(s.epnum, s.start, s.duration, s.filters, div))
+        )
+        return btn
+
+    nameTag: jQuery('<div>').addClass('mm-sec-name').text(name)
+    startTag: jQuery('<div>').addClass('mm-sec-start').text(mad.formatTime(start))
+    editToggle: mad.createButton(_t_('section_toggle_edit')).css('float', 'right')
+    div: jQuery('<div>').addClass('mm-section').
+                         append(nameTag).
+                         append(startTag).
+                         append(editToggle).
+                         append(jQuery('<div>').css('clear', 'both')).
+                         append(addSegmentButton())[0]
+    div.name: name
+    div.start: start
+    div.addSegment: (s): jQuery(@).append(s).append(addSegmentButton())
+
+    editToggle.click((): jQuery(div).toggleClass('in-edit'))
+    return div
+
+jQuery(document.body).ready(%)
+jQuery('#workspace-tab').click(%)
+
+jQuery('#save-workspace').hide()
+mad.projects.save(%%)
+
+proj: jQuery('#projs :radio:checked')[0].project
+
+jQuery('#ws-placeholder').remove()
+workspace: jQuery('#ws-panel').show()
+
+jQuery('#ws-projname').text(proj.name)
+segsCell: jQuery('#ws-segs').html('')
+actionCell: jQuery('#ws-action')
+
+jQuery('#ws-audio-path').text(proj.getAudioPath())
+jQuery('#ws-video-path').text(proj.getVideoPath())
+
+workspace.audioLen: getAVLen(proj.getAudioPath(), %%)
+if workspace.audioLen = -1
+    return segsCell.text(_t_('bad_audio'))
+jQuery('#ws-audio-len').text(mad.formatTime(workspace.audioLen))
+
+workspace.videoList: getVideoMap(proj.getVideoPath(), %%)
+if workspace.videoList.length = 0
+    return segsCell.text(_t_('bad_video_dir'))
+workspace.videoList.sort((a, b): a.epnum - b.epnum)
+mad.edit.syncEpnums(workspace.videoList |: $.epnum)
+
+func findSourceByEpnum(epnum)
+    return (workspace.videoList |:
+        if $.epnum = epnum
+            $result.push($.path)
+    )[0]
+
+getSequence(proj.getOutputPath(), %%) |:
+    sec: newSection($.name, $.start)
+    segsCell.append(sec)
+    $.segments |: sec.addSegment(newSegment($.epnum, $.start, $.duration, $.filters, sec))
+
+jQuery('#save-workspace').show()
+
+func saveCurrentProjct()
+    jQuery.post('/seqc/save', {
+        path: proj.getOutputPath(),
+        sections: JSON.stringify(jQuery('.mm-section') |: {
+            name: $.name,
+            start: $.start,
+            segments: jQuery($).find('.mm-segment') |: {
+                epnum: $.epnum,
+                start: $.start,
+                duration: $.duration,
+                filters: $.filters,
+            }
+        }),
+    }, %r)
+
+export mad.workspace.save: saveCurrentProjct
