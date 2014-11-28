@@ -1,0 +1,516 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>Mad Magia 控制台</title>
+<script src='/static/jquery.js'></script>
+<script src='/static/bootstrap-all.js'></script>
+<link href='/static/bootstrap-all.css' rel='stylesheet'>
+<script src='/static/output/js/madmagia.js'></script>
+<style>
+* {
+    font-family: sans-serif;
+}
+
+hr {
+    clear: both;
+    width: 80%;
+    margin: auto;
+    margin-bottom: 6px;
+    margin-top: 6px;
+}
+
+video, audio {
+    clear: both;
+    width: 800px;
+    display: block;
+    margin: auto;
+}
+
+video {
+    height: 450px;
+}
+
+p, span {
+    word-wrap: break-word;
+}
+
+#myTab, #myTabContent {
+    width: 800px;
+    margin: auto;
+}
+
+.confirm-hidden {
+    display: none;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    filter: alpha(opacity=50);
+    -moz-opacity:0.5;
+    -khtml-opacity: 0.5;
+    opacity: 0.5;
+}
+
+.overlay-panel {
+    position: fixed;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    height: 80%;
+    background-color: white;
+    overflow: scroll;
+}
+
+.overlay-panel .file-btn {
+    display: inline-block;
+    width: 180px;
+    margin-right: 20px;
+    margin-left: 5px;
+    min-height: 40px;
+}
+
+.mm-section {
+    border: 1px #021 solid;
+    margin: 4px;
+    min-height: 48px;
+    width: 580px;
+    max-width: 580px;
+    margin-bottom: 4px;
+    margin-top: 4px;
+    padding-bottom: 6px;
+}
+
+.mm-sec-name {
+    font-size: 1.2em;
+    min-width: 240px;
+    float: left;
+    margin: 6px;
+}
+
+.mm-sec-start {
+    font-size: 1.2em;
+    width: 120px;
+    float: left;
+    margin: 6px;
+}
+
+.mm-sec-sub {
+    clear: both;
+    width: 90%;
+    margin-left: 8px;
+    text-overflow: ellipsis;
+}
+
+.section-edit-enable {
+    display: initial;
+}
+
+.in-edit .section-edit-enable {
+    display: none;
+}
+
+.section-edit-disable {
+    display: none;
+}
+
+.in-edit .section-edit-disable {
+    display: initial;
+}
+
+.in-edit .mm-section-preview {
+    display: none;
+}
+
+.mm-section-select {
+    display: none;
+    margin: 8px;
+}
+
+.mm-section-selecting .mm-section-select {
+    display: initial;
+}
+
+.edit-sec-sep {
+    display: none;
+}
+
+.in-edit .edit-sec-sep {
+    display: block;
+}
+
+.in-edit .mm-section-edit, .in-edit .mm-section-insert, .mm-section-preview {
+    display: inline-block;
+    width: 160px;
+    margin: 8px;
+}
+
+.mm-section-edit, .mm-section-insert {
+    display: none;
+}
+
+.mm-section:first-child .mm-section-edit {
+    visibility: hidden;
+}
+
+.ws-add-segment {
+    margin-left: 80px;
+    display: none;
+}
+
+.in-edit .ws-add-segment {
+    display: inline-block;
+}
+
+.mm-segment {
+    display: inline-block;
+    margin-left: 32px;
+    margin-right: 6px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+
+    border-left: 2px #fd4 solid;
+    background-color: #ffd;
+
+    width: 500px;
+}
+
+.in-edit .mm-segment {
+    border-left-color: green;
+    background-color: #cdc;
+
+    cursor: pointer;
+}
+
+.in-edit .mm-segment:hover {
+    background-color: #efe;
+}
+
+.mm-segment-del {
+    display: none;
+}
+
+.in-edit .mm-segment-del {
+    line-height: 12px;
+    font-size: 0.8em;
+    display: inline-block;
+    margin-bottom: 6px;
+    width: 36px;
+}
+
+.mm-seg-el {
+    display: inline-block;
+    margin: 6px;
+    min-width: 80px;
+}
+
+.mm-seg-filter {
+    margin-left: 40px;
+}
+
+.mm-time-spanner {
+    width: 180px;
+    max-width: 192px;
+    float: left;
+    margin: 8px;
+    margin-left: 0;
+}
+
+.mm-time-spanner:nth-child(2n) {
+    text-align: right;
+    float: right;
+    margin-right: 0;
+}
+
+.mm-time-spanner-btn {
+    display: inline-block;
+    height: 40px;
+    width: 40px;
+}
+
+.mm-time-spanner-label {
+    display: inline-block;
+    width: 80px;
+    max-width: 110px;
+    text-align: center;
+}
+</style>
+</head>
+<body>
+
+<ul id='myTab' class='nav nav-tabs' role='tablist'>
+  <li role='presentation' class='active'><a href='#projs' id='projs-tab' role='tab' data-toggle='tab' aria-controls='projs' aria-expanded='true'>视频项目</a></li>
+  <li role='presentation'><a href='#workspace' role='tab' id='workspace-tab' data-toggle='tab' aria-controls='workspace'>剪辑片段</a></li>
+</ul>
+
+<div id='myTabContent' class='tab-content'>
+  <div role='tabpanel' class='tab-pane fade in active' id='projs' aria-labelledBy='projs-tab'>
+    <p id='projs-loading'>正在加载已有项目...</p>
+    <div id='projs-list'></div>
+  </div>
+  <div role='tabpanel' class='tab-pane fade' id='workspace' aria-labelledBy='workspace-tab'>
+    <p id='ws-placeholder'>你需要先在 '视频项目' 面板中选定一个项目</p>
+    <p id='ws-projname' style='text-align: center'></p>
+    <table style='display: none; width: 100%' id='ws-panel'>
+      <tr>
+        <td id='ws-segs' style='width: 600px; vertical-align: top'></td>
+        <td id='ws-action' style='max-width: 200px; width: 200px; vertical-align: top'>
+          <button id='save-workspace' onclick='mad.workspace.save()' class='btn btn-primary input-block-level' style='margin-bottom: 40px; height: 64px; font-size: 1.6em'>保存当前项目</button>
+          <div>
+              在预览/新建分节之后会自动保存
+          </div>
+
+          <button class='btn input-block-level collapse-trigger'>
+            音频信息
+          </button>
+          <div>
+            <p id='ws-audio-path'></p>
+            音频时长 <span id='ws-audio-len'></span>
+          </div>
+
+          <button class='btn input-block-level collapse-trigger'>
+            视频信息
+          </button>
+          <div>
+            视频目录 <span id='ws-video-path'></span>
+          </div>
+
+          <p style='margin-top: 40px'>
+              在变更输入视频目录, 调整视频文件编号等操作之后, 或当需要清理系统缓存目录时, 请点击以下按钮手动清除缓存文件
+          </p>
+          <button class='btn btn-danger clearcached input-block-level' onclick='mad.clearCached()' class='btn btn-primary'>清除所有缓存文件</button>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<hr>
+
+<div style='width: 800px; margin: auto; background-color: #f5f5f5'>
+<pre style='display: inline-block; float: left'><code>________  _____  ______   ________  _____   ______ _____  _____
+|      | /     \ |     \  |      | /     \ |     | |   | /     \
+|      | |     | |     |  |      | |     | |  ___| |   | |     |
+|      | |  -  | |  D  |  |      | |  -  | | |   | |   | |  -  |
+|  | | | |  _  | |     |  |  | | | |  _  | |  -- | |   | |  _  |
+|__|_|_| |_| |_| |_____/  |__|_|_| |_| |_| |_____| |___| |_| |_|</code></pre>
+<div style='padding: 1em; float: right; line-height: 2.4em; text-align: right'>
+第一预览版 <small>2015-01-15</small> <a href='http://zlo.gs/p/neuront/madmagia-publish'>使用手册</a>
+<br>
+项目地址: <a href='https://github.com/neuront/madmagia'>github.com/neuront/madmagia</a>
+<br>
+&copy; <a href='http://www.douban.com/people/neuront/'>神经元</a>／<a href='http://bitfoc.us/'>Bit Focus</a>
+</div>
+<hr>
+</div>
+
+<div id='edit-segment-panel' style='display: none'>
+    <h1 style='float: left; margin-left: 6px'>片段规格设置</h1>
+    <div style='float: right'><button id='edit-segment-quit' class='btn btn-danger'>X</button></div>
+    <div style='clear: both'>节长度为 <span id='edit-section-duration'></span>s</div>
+    <table style='width: 280px; max-width: 280px; margin: 6px; float: left'>
+        <tr>
+            <td>所在话数</td>
+            <td><select id='edit-segment-epnum-selector' class='input-block-level'></select></td>
+        </tr>
+        <tr>
+            <td>开始时间</td>
+            <td><input id='edit-segment-start' class='input-block-level'></td>
+        </tr>
+        <tr>
+            <td>截取长度</td>
+            <td><input id='edit-segment-duration' class='input-block-level'></td>
+        </tr>
+        <tr>
+            <td id='edit-segment-filters-cell' colspan='2' style='text-align: center;'>
+                <label class='input-block-level'>
+                    <input type='checkbox' id='edit-segment-repeatframe-cb'>
+                    <span>单画面定格</span>
+                </label>
+                <label class='input-block-level'>
+                    <input type='checkbox' id='edit-segment-hflip-cb'>
+                    <span>水平翻转</span>
+                </label>
+                <label class='input-block-level'>
+                    <input type='checkbox' id='edit-segment-fillspan-cb'>
+                    <span>拉伸/压缩视频长度至</span>
+                </label>
+                <input class='input-block-level' id='edit-segment-fillspan-in'>
+            </td>
+        </tr>
+        <tr>
+            <td colspan='2'>
+                <button class='btn btn-primary input-block-level' id='edit-segment-confirm'>确定</button>
+                <p id='edit-seg-error-feedback' style='color: red'></p>
+            </td>
+        </tr>
+    </table>
+    <div style='float: left; width: 400px; max-width: 400px'>
+        <p style='text-align: center'><span class='edit-segment-frame-time'></span> 时间点上的画面</p>
+        <img style='display: block' id='edit-segment-frame-viewer'>
+        <div class='mm-time-spanner'>
+            <button class='btn mm-time-spanner-btn' data-span='-0.05'>&lt;</button>
+            <span class='mm-time-spanner-label'>0.05s</span>
+            <button class='btn mm-time-spanner-btn' data-span='0.05'>&gt;</button>
+        </div>
+        <div class='mm-time-spanner'>
+            <button class='btn mm-time-spanner-btn' data-span='-0.1'>&lt;</button>
+            <span class='mm-time-spanner-label'>0.10s</span>
+            <button class='btn mm-time-spanner-btn' data-span='0.1'>&gt;</button>
+        </div>
+        <div class='mm-time-spanner'>
+            <button class='btn mm-time-spanner-btn' data-span='-0.5'>&lt;</button>
+            <span class='mm-time-spanner-label'>0.50s</span>
+            <button class='btn mm-time-spanner-btn' data-span='0.5'>&gt;</button>
+        </div>
+        <div class='mm-time-spanner'>
+            <button class='btn mm-time-spanner-btn' data-span='-1'>&lt;</button>
+            <span class='mm-time-spanner-label'>1.00s</span>
+            <button class='btn mm-time-spanner-btn' data-span='1'>&gt;</button>
+        </div>
+        <p style='clear: both; text-align: center'><span class='edit-segment-frame-time'></span> 时间点上的画面</p>
+        <button class='btn input-block-level' id='edit-segment-use-as-start'>使用该时间作为片段开始</button>
+
+        <button class='btn btn-primary input-block-level' id='edit-segment-play' style='margin-top: 20px; display: none'>播放这个视频</button>
+    </div>
+</div>
+
+<div id='edit-section-panel' style='display: none'>
+    <h1 style='float: left; margin-left: 6px'>音频分节编辑</h1>
+    <div style='float: right'><button id='edit-section-quit' class='btn btn-danger'>X</button></div>
+    <hr style='clear: both;'>
+
+    <table style='margin: auto; min-width: 80%'>
+        <tr>
+            <td style='min-width: 240px; width: 280px; max-width: 280px;'>节的名称<br><sub>给音频分节取个名字; 不要包含空格或冒号</sub></td>
+            <td><input id='edit-section-name' class='input-block-level'></td>
+        </tr>
+        <tr><td colspan='2'><hr></td></tr>
+        <tr>
+            <td style='text-align: right'>上一节开始于</td>
+            <td><span id='edit-prev-section-start'></span></td>
+        </tr>
+        <tr>
+            <td>设置本节开始时间<br><sub>须在上一节之后, 以及下一节之前</sub></td>
+            <td><input id='edit-section-start' class='input-block-level'></td>
+        </tr>
+        <tr id='edit-section-start-spanners'>
+            <td colspan='2'>
+                <div style='width: 400px; max-width: 400px; margin: auto'>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-0.05'>&lt;</button>
+                        <span class='mm-time-spanner-label'>0.05s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='0.05'>&gt;</button>
+                    </div>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-0.1'>&lt;</button>
+                        <span class='mm-time-spanner-label'>0.10s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='0.1'>&gt;</button>
+                    </div>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-0.5'>&lt;</button>
+                        <span class='mm-time-spanner-label'>0.50s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='0.5'>&gt;</button>
+                    </div>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-1'>&lt;</button>
+                        <span class='mm-time-spanner-label'>1.00s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='1'>&gt;</button>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr><td colspan='2'><hr></td></tr>
+        <tr>
+            <td style='text-align: right'>下一节开始于</td>
+            <td><span id='edit-next-section-start'></span></td>
+        </tr>
+            <td>设置本节结束时间<br><sub>也就是下一节开始的时间; 须在开始时间之后</sub></td>
+            <td><input id='edit-section-end' class='input-block-level'></td>
+        </tr>
+        <tr id='edit-section-end-spanners'>
+            <td colspan='2'>
+                <div style='width: 400px; max-width: 400px; margin: auto'>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-0.05'>&lt;</button>
+                        <span class='mm-time-spanner-label'>0.05s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='0.05'>&gt;</button>
+                    </div>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-0.1'>&lt;</button>
+                        <span class='mm-time-spanner-label'>0.10s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='0.1'>&gt;</button>
+                    </div>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-0.5'>&lt;</button>
+                        <span class='mm-time-spanner-label'>0.50s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='0.5'>&gt;</button>
+                    </div>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-1'>&lt;</button>
+                        <span class='mm-time-spanner-label'>1.00s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='1'>&gt;</button>
+                    </div>
+                    <button style='clear: both' class='btn input-block-level' id='edit-section-play-audio'>试听这个区间的音频</button>
+                </div>
+            </td>
+        </tr>
+        <tr style='display: none'>
+            <td>字幕<br><sub>可生成 SRT 字幕文件</sub></td>
+            <td><textarea id='edit-section-sub' class='input-block-level'></textarea></td>
+        </tr>
+        <tr>
+            <td colspan='2'>
+                <button class='btn btn-primary input-block-level' id='edit-section-confirm'>确定</button>
+                <p id='edit-sec-error-feedback' style='color: red'></p>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div id='play-video-panel' style='display: none'>
+    <p style='float: left; margin-left: 6px'>播放视频</p>
+    <div style='float: right'><button id='video-play-quit' class='btn btn-danger'>X</button></div>
+    <video controls='controls' autoplay='autoplay'>你的浏览器 OUT 了, 居然还不支持直接播放视频, 赶紧换 Chrome 吧</video>
+    <button class='btn btn-primary input-block-level' id='play-video-use-time'>使用当前画面作为片段开始</button>
+</div>
+
+<div id='play-audio-panel' style='display: none'>
+    <p style='float: left; margin-left: 6px'>播放音频</p>
+    <div style='float: right'><button id='audio-play-quit' class='btn btn-danger'>X</button></div>
+    <audio controls='controls' autoplay='autoplay'>你的浏览器 OUT 了, 居然还不支持直接播放音频, 赶紧换 Chrome 吧</audio>
+</div>
+
+<div id='play-section-panel' style='display: none'>
+    <p style='float: left; margin-left: 6px'>播放分节</p>
+    <div style='float: right'><button id='section-play-quit' class='btn btn-danger'>X</button></div>
+    <div id='slicing-status' style='clear: both'></div>
+    <div style='text-align: center'>
+        所选中的分节的总长度 (估计值): <span id='play-section-sectotal'></span>
+        <span style='display: none'>
+        与分节内片段的总长度 <span id='play-section-segtotal'></span>
+        </span>
+        <div style='display: none' id='play-section-warning'>
+            相差甚远, 确定要继续吗?
+            <button class='btn btn-danger'>继续, 就是这么任性</button>
+        </div>
+    </div>
+    <div id='play-section-ask-export'>
+        你选择的片段长度超过了 30 秒预览限制, 点击下面的按钮将导出为高清视频到指定的输出目录, 这样你可以与小伙伴们分享视频或上传至视频网站
+        <br>
+        <button class='btn' id='play-section-export'>只能点这里确定 否则右上红 X</button>
+    </div>
+    <div style='text-align: center'>
+        <video autoplay='autoplay'>你的浏览器 OUT 了, 居然还不支持直接播放视频, 赶紧换 Chrome 吧</video>
+        <div>
+            <button class='btn' id='play-section-replay'>重放</button>
+            <button class='btn' id='play-section-pause'>暂停/继续</button>
+            <span id='play-section-pos'></span>
+        </div>
+    </div>
+</div>

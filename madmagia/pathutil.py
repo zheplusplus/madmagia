@@ -1,5 +1,7 @@
 import os
 
+PATH_ENCODING = 'gbk' if os.name == 'nt' else 'utf-8'
+
 
 def fullpath(p):
     return os.path.realpath(os.path.expanduser(p))

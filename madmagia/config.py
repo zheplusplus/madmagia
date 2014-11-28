@@ -7,6 +7,7 @@ from datetime import datetime
 
 import pathutil
 import sequence
+import files
 
 
 def _get_config(c, sec, opt, default=''):
@@ -14,19 +15,6 @@ def _get_config(c, sec, opt, default=''):
         return c.get(sec, opt) or default
     except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
         return default
-
-
-def _is_video(f, postfix):
-    for p in postfix:
-        if f.endswith(p):
-            return True
-    return False
-
-
-def _input_videos(video_dir, postfix):
-    postfix = filter(None, postfix)
-    return {sequence.epnum(f): os.path.join(video_dir, f)
-            for f in os.listdir(video_dir) if _is_video(f, postfix)}
 
 
 def _logger(c):
@@ -41,7 +29,7 @@ def _logger(c):
     logfile = _get_config(c, 'logging', 'file', None)
     if not logfile:
         logfile = os.path.join(tempfile.gettempdir(),
-                               datetime.now().strftime('mmtmp_%Y-%m-%d.log'))
+                               datetime.now().strftime('mmlog_%Y-%m-%d.log'))
     handler = logging.FileHandler(logfile)
     logger.addHandler(handler)
     handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
@@ -50,8 +38,7 @@ def _logger(c):
 
 
 def _init_config():
-    conf_file = 'local.ini' if pathutil.isfile('local.ini') else 'config.ini'
-    with open(conf_file, 'r') as conf_file:
+    with open('config.ini', 'r') as conf_file:
         c = ConfigParser.ConfigParser()
         c.readfp(conf_file)
         if not _get_config(c, 'input', 'video_dir'):
@@ -59,7 +46,7 @@ def _init_config():
         video_dir = pathutil.fullpath(_get_config(c, 'input', 'video_dir'))
         return {
             'video_dir': video_dir,
-            'input_videos': _input_videos(
+            'input_videos': files.input_videos(
                 video_dir, _get_config(c, 'input', 'video_postfix',
                                        'mov,mkv,mp4,avi,rm,rmvb').split(',')),
             'bgm': pathutil.fullpath(_get_config(c, 'input', 'bgm')),

@@ -1,0 +1,138 @@
+_t_: mad.gettext
+
+jQuery(document).ready(%)
+
+vplayer: jQuery('#play-video-panel video')[0]
+
+func video(src, cb)
+    videoDiv: jQuery('#play-video-panel').detach()
+    panel: mad.createOverlapPanel().append(videoDiv.show())
+
+    func quit(time)
+        vplayer.src: ''
+        videoDiv.detach()
+        jQuery(document.body).append(videoDiv.hide())
+        panel.quit()
+        cb(time)
+
+    jQuery('#video-play-quit').unbind('click').click((): quit(null))
+    jQuery('#play-video-use-time').unbind('click').click((): quit(vplayer.currentTime))
+    vplayer.src: '/video/?path=' + encodeURIComponent(src)
+
+aplayer: jQuery('#play-audio-panel audio')[0]
+
+func audio(file, output_dir, start, duration)
+    audioDiv: jQuery('#play-audio-panel').detach()
+    panel: mad.createOverlapPanel().append(audioDiv.show())
+
+    func quit()
+        aplayer.src: ''
+        audioDiv.detach()
+        jQuery(document.body).append(audioDiv.hide())
+        panel.quit()
+
+    jQuery('#audio-play-quit').unbind('click').click((): quit())
+
+    jQuery.post('/audio/slice', {file: file, start: start, duration: duration, output_dir: output_dir}, %r)
+    aplayer.src: '/audio/?path=' + encodeURIComponent(r)
+
+secplayer: jQuery('#play-section-panel video')[0]
+
+func section(sections, cb)
+    avDiv: jQuery('#play-section-panel').detach()
+    panel: mad.createOverlapPanel().append(avDiv.show())
+    secplayer.src: ''
+
+    func quit()
+        secplayer.src: ''
+        avDiv.detach()
+        jQuery(document.body).append(avDiv.hide())
+        panel.quit()
+        cb()
+    jQuery('#section-play-quit').unbind('click').click((): quit())
+
+    statusLabel: jQuery('#slicing-status')
+
+    func sliceSegmentAndPush(segment, index, result, uri, %%)
+        if !panel.active
+            return
+        statusLabel.text(_t_('slicing_segment') + ' #' + index)
+        jQuery.post(uri, {
+            segment: JSON.stringify(segment.tojson()),
+            video_dir: mad.workspace.getVideoPath(),
+            output_dir: mad.workspace.getOutputPath(),
+        }, %r)
+        result.push(r)
+
+    func askExportSegments(segments, audioStart, audioEnd, %%)
+        statusLabel.text('')
+        jQuery('#play-section-ask-export').show().next().hide()
+        jQuery('#play-section-export').unbind('click').removeAttr('disabled').click(%)
+        jQuery('#play-section-export').attr('disabled', 'disabled')
+        seg_files: segments |:
+            sliceSegmentAndPush($, $i, $result, '/video/slice_export', %%)
+        if !panel.active
+            return
+        statusLabel.text(_t_('merging_segments'))
+        jQuery.post('/video/merge_export', {
+            start: audioStart,
+            end: audioEnd,
+            segments: JSON.stringify(seg_files),
+            audio: mad.workspace.getAudioPath(),
+            output_dir: mad.workspace.getOutputPath(),
+        }, %r)
+        if !panel.active
+            return
+        statusLabel.text(_t_('segments_exported') + ': ' + r)
+
+    audioStart: sections[0].start
+    audioEnd: sections[sections.length - 1].end()
+    jQuery('#play-section-pos').text(mad.formatTime(0) + ' / ' + mad.formatTime(audioStart))
+    jQuery('#play-section-sectotal').text(mad.formatTime(audioEnd - audioStart))
+
+    segments: (sections |: $.segments()).reduce((x, y): x ++ y, [])
+    segTotal: (segments |: $.duration).reduce((x, y): x + y, 0)
+    jQuery('#play-section-segtotal').text(mad.formatTime(segTotal))
+
+    if segTotal > 30
+        return askExportSegments(segments, audioStart, audioEnd, (e, r): cb(r))
+    jQuery('#play-section-ask-export').hide().next().show()
+
+    seg_files: segments |:
+        sliceSegmentAndPush($, $i, $result, '/video/slice', %%)
+    statusLabel.text(_t_('merging_segments'))
+    if !panel.active
+        return
+    jQuery.post('/video/merge', {
+        start: audioStart,
+        end: audioEnd,
+        segments: JSON.stringify(seg_files),
+        audio: mad.workspace.getAudioPath(),
+        output_dir: mad.workspace.getOutputPath(),
+    }, %r)
+    if !panel.active
+        return
+    secplayer.src: '/video/?path=' + encodeURIComponent(r)
+
+    jQuery('#play-section-replay').unbind('click').click(():
+        src: secplayer.src
+        if !src
+            return
+        secplayer.src: ''
+        secplayer.src: src
+    )
+    jQuery('#play-section-pause').unbind('click').click(():
+        if !secplayer.src
+            return
+        if secplayer.paused
+            secplayer.play()
+        else
+            secplayer.pause()
+            jQuery('#play-section-pos').text(
+                mad.formatTime(secplayer.currentTime) +
+                ' / ' + mad.formatTime(secplayer.currentTime + audioStart))
+    )
+
+export mad.player.video: video
+export mad.player.audio: audio
+export mad.player.section: section

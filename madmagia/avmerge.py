@@ -10,19 +10,26 @@ import shell
 OUTPUT_FILE = pathutil.fullpath('./output/output.mp4')
 
 
-def _merge_sections(sections, audio_file):
-    video_file = video_slice.merge_segments(slice_partial(sections))
-
+def avmerge(audio_file, video_file, output_file=OUTPUT_FILE,
+            force_encoder=None, sync=True):
     logger.info('Zip video and audio')
-    pathutil.rm(OUTPUT_FILE)
-    p = shell.execute(
+    pathutil.rm(output_file)
+    p = shell.Process([
         config['avconv'],
         '-i', audio_file,
         '-i', video_file,
-        '-c', 'copy',
-        OUTPUT_FILE)
-    if p.returncode != 0:
+        '-acodec', 'copy',
+        '-vcodec', 'copy' if force_encoder is None else force_encoder,
+        output_file], sync)
+    p.execute()
+    if sync and p.returncode != 0:
         raise ValueError('fail')
+    return output_file
+
+
+def _merge_sections(sections, audio_file):
+    video_file = video_slice.merge_segments(slice_partial(sections))
+    return avmerge(audio_file, video_file)
 
 
 def _find_sec(sections, sec_name):
@@ -50,7 +57,7 @@ def slice_partial(sections):
 
 def find_range(begin_sec_name, end_sec_name):
     with open(config['sequence'], 'r') as f:
-        sections, total_dur = sequence.parse(f.readlines())
+        sections, total_dur = sequence.parse(f.readlines(), True)
     begin_index, begin_section = _find_sec(sections, begin_sec_name)
     begin_time = begin_section.start
     end_time, sec_range = _interval_secs(sections, end_sec_name, begin_index)

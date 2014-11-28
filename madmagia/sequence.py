@@ -1,5 +1,7 @@
 import re
 
+import files
+
 
 class ParseError(ValueError):
     def __init__(self, message, linenum, content):
@@ -9,12 +11,12 @@ class ParseError(ValueError):
 
 
 class Segment(object):
-    def __init__(self, epnum, start, duration, subt):
+    def __init__(self, epnum, start, duration, subt=None, filters=None):
         self.epnum = epnum
         self.start = start
         self.duration = duration
         self.subt = subt
-        self.filters = []
+        self.filters = filters or []
 
     def add_filter(self, f, args):
         self.filters.append((f, args))
@@ -29,20 +31,6 @@ class Section(object):
 
     def add(self, segment):
         self.segments.append(segment)
-
-_PREFIX_FLOAT = re.compile(r'(^[0-9]+\.[0-9]+)')
-_PREFIX_INT = re.compile(r'(^[0-9]+)')
-
-
-def epnum(fn):
-    mat = _PREFIX_FLOAT.match(fn)
-    if mat is not None:
-        return float(mat.groups()[0])
-    mat = _PREFIX_INT.match(fn)
-    if mat is not None:
-        return int(mat.groups()[0])
-    raise ValueError('Unable to find index pattern of filename: ' + fn)
-
 
 _ctrls = dict()
 
@@ -105,9 +93,10 @@ def _section(i, arg, sections, section_names):
         name = args[1]
         if ':' in name:
             raise ParseError('Invalid section name', i, name)
-        if name in section_names:
-            raise ParseError('Duplicated section name', i, name)
-        section_names.add(name)
+        if section_names is not None:
+            if name in section_names:
+                raise ParseError('Duplicated section name', i, name)
+            section_names.add(name)
 
     sub = ' '.join(args[2:])
     sections.append(Section(start, name, sub))
@@ -123,13 +112,13 @@ def _segment(line):
     start_time = parse_time(start)
     if start_time is None:
         raise ValueError('invalid start time:' + start)
-    return Segment(epnum(epn), start_time, float(dur), subt)
+    return Segment(files.epnum(epn), start_time, float(dur), subt)
 
 
-def parse(sequence):
+def parse(sequence, check_dup):
     total_dur = 0
     sections = [Section(0, ':begin')]
-    section_names = set()
+    section_names = set() if check_dup else None
 
     for i, line in enumerate(sequence):
         line = line.strip()

@@ -1,4 +1,6 @@
-local.ini
+webinterface/static/output
+webinterface/bin
+*.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
