@@ -1,0 +1,22 @@
+_t_: mad.gettext
+
+jQuery(document).ready(%)
+
+player: jQuery('#video-player')[0]
+
+func video(src, cb)
+    videoDiv: jQuery('#play-video-panel').detach()
+    panel: mad.createOverlapPanel().append(videoDiv.show())
+
+    func quit(time)
+        player.src: ''
+        videoDiv.detach()
+        jQuery(document.body).append(videoDiv.hide())
+        panel.quit()
+        cb(time)
+
+    jQuery('#video-play-quit').unbind('click').click((): quit(null))
+    jQuery('#play-video-use-time').unbind('click').click((): quit(player.currentTime))
+    player.src: '/video/?path=' + encodeURIComponent(src)
+
+export mad.player.video: video

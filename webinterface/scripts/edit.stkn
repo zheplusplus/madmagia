@@ -1,5 +1,7 @@
 _t_: mad.gettext
 
+jQuery(document).ready(%)
+
 SELECT_FILTERS: {
     hflip: (): jQuery('#edit-segment-hflip-cb').attr('checked', 'checked'),
     repeatframe: (): jQuery('#edit-segment-repeatframe-cb').attr('checked', 'checked'),
@@ -19,7 +21,9 @@ func getFilters()
         f.push(['fillspan', parseFloat(jQuery('#edit-segment-fillspan-in').val())])
     return f
 
-func editSegment(segment, sourcePath, outputPath, cb)
+segStartInput: jQuery('#edit-segment-start')
+
+func editSegment(segment, cb)
     editDiv: jQuery('#edit-segment-panel').detach()
     panel: mad.createOverlapPanel().append(editDiv.show())
 
@@ -30,9 +34,9 @@ func editSegment(segment, sourcePath, outputPath, cb)
 
     jQuery('#edit-segment-quit').unbind('click').click(quit)
     jQuery('#edit-segment-confirm').unbind('click').click(():
-        start: mad.parseTime(jQuery('#edit-segment-start').val())
+        start: mad.parseTime(segStartInput.val())
         if isNaN(start)
-            jQuery('#edit-segment-start').focus()
+            segStartInput.focus()
             return jQuery('#edit-error-feedback').text(_t_('edit_invalid_time'))
         duration: parseFloat(jQuery('#edit-segment-duration').val())
         if isNaN(duration)
@@ -49,15 +53,9 @@ func editSegment(segment, sourcePath, outputPath, cb)
 
     if segment.epnum
         jQuery('#edit-segment-epnum-selector option[value="' + segment.epnum + '"]').attr('selected', 'selected')
-        jQuery.post('/frame/gen', {
-            epnum: segment.epnum,
-            time: segment.start,
-            source_path: sourcePath,
-            output_path: outputPath
-        }, %r)
-        jQuery('#edit-segment-frame-viewer').attr('src', '/frame/?path=' + encodeURIComponent(r))
+        frameTime.setTime(segment.start)
 
-    jQuery('#edit-segment-start').val(mad.formatTime(segment.start))
+    segStartInput.val(mad.formatTime(segment.start))
     jQuery('#edit-segment-duration').val(segment.duration)
 
     segment.filters |:
@@ -65,7 +63,41 @@ func editSegment(segment, sourcePath, outputPath, cb)
         if sf
             sf($[1])
 
-export mad.edit.createSegment: (sourcePath, outputPath, cb): editSegment({}, sourcePath, outputPath, cb)
+func currentVideoFile()
+    epnum: parseFloat(jQuery('#edit-segment-epnum-selector :selected').val())
+    return [epnum, mad.workspace.findSourceByEpnum(epnum)]
+
+func displayFrame(time)
+    img: jQuery('#edit-segment-frame-viewer')
+    img.attr('src', '/frame/loading')
+    epnum_n_video: currentVideoFile()
+    jQuery.post('/frame/gen', {
+        epnum: epnum_n_video[0],
+        time: time,
+        source_path: epnum_n_video[1],
+        output_path: mad.workspace.getOutputPath(),
+    }, %r)
+    img.attr('src', '/frame/?path=' + encodeURIComponent(r))
+
+frameTime: jQuery('.edit-segment-frame-time')
+frameTime.time: 0
+frameTime.setTime: (time):
+    @time: time if time >=0 else 0
+    @text(mad.formatTime(@time))
+    displayFrame(@time)
+frameTime.incTime: (delta): @setTime(parseFloat(delta) + @time)
+
+jQuery('#edit-segment-epnum-selector').change((): frameTime.incTime(0))
+jQuery('.mm-time-spanner-btn').click((): frameTime.incTime(jQuery(@).data('span')))
+jQuery('#edit-segment-use-as-start').click((): segStartInput.val(mad.formatTime(frameTime.time)))
+
+jQuery('#edit-segment-play').click(():
+    mad.player.video(currentVideoFile()[1], %r)
+    if r != null
+        frameTime.setTime(r)
+)
+
+export mad.edit.createSegment: (cb): editSegment({}, cb)
 export mad.edit.editSegment: editSegment
 export mad.edit.syncEpnums: (ls):
     s: jQuery('#edit-segment-epnum-selector').html('')

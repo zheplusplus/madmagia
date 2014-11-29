@@ -113,6 +113,33 @@
     margin-left: 40px;
 }
 
+.mm-time-spanner {
+    width: 180px;
+    max-width: 192px;
+    float: left;
+    margin: 8px;
+    margin-left: 0;
+}
+
+.mm-time-spanner:nth-child(2n) {
+    text-align: right;
+    float: right;
+    margin-right: 0;
+}
+
+.mm-time-spanner-btn {
+    display: inline-block;
+    height: 40px;
+    width: 40px;
+}
+
+.mm-time-spanner-label {
+    display: inline-block;
+    width: 80px;
+    max-width: 110px;
+    text-align: center;
+}
+
 p, span {
     word-wrap: break-word;
 }
@@ -137,7 +164,9 @@ p, span {
       <tr>
         <td id='ws-segs' style='width: 600px; vertical-align: top'></td>
         <td id='ws-action' style='max-width: 200px; width: 200px; vertical-align: top'>
-          <button class='btn btn-primary input-block-level collapse-trigger'>
+          <button id='save-workspace' onclick='mad.workspace.save()' class='btn btn-primary input-block-level' style='margin-bottom: 40px; height: 64px; font-size: 1.6em'>保存当前项目</button>
+
+          <button class='btn input-block-level collapse-trigger'>
             音频信息
           </button>
           <div>
@@ -145,14 +174,17 @@ p, span {
             音频时长 <span id='ws-audio-len'></span>
           </div>
 
-          <button class='btn btn-primary input-block-level collapse-trigger'>
+          <button class='btn input-block-level collapse-trigger'>
             视频信息
           </button>
           <div>
             视频目录 <span id='ws-video-path'></span>
           </div>
 
-          <button id='save-workspace' onclick='mad.workspace.save()' class='btn btn-primary'>保存</button>
+          <p style='margin-top: 40px'>
+              在变更输入视频目录, 调整视频文件编号等操作之后, 或当需要清理系统缓存目录时, 请点击以下按钮手动清除缓存文件
+          </p>
+          <button class='btn btn-danger clearcached input-block-level' onclick='mad.clearCached()' class='btn btn-primary'>清除所有缓存文件</button>
         </td>
       </tr>
     </table>
@@ -200,7 +232,40 @@ p, span {
             </td>
         </tr>
     </table>
-    <div style='float: left; width: 200px; max-width: 200px'>
-        <img id='edit-segment-frame-viewer'>
+    <div style='float: left; width: 400px; max-width: 400px'>
+        <p style='text-align: center'><span class='edit-segment-frame-time'></span> 时间点上的画面</p>
+        <img style='display: block' id='edit-segment-frame-viewer'>
+        <div class='mm-time-spanner'>
+            <button class='btn mm-time-spanner-btn' data-span='-0.05'>&lt;</button>
+            <span class='mm-time-spanner-label'>0.05s</span>
+            <button class='btn mm-time-spanner-btn' data-span='0.05'>&gt;</button>
+        </div>
+        <div class='mm-time-spanner'>
+            <button class='btn mm-time-spanner-btn' data-span='-0.1'>&lt;</button>
+            <span class='mm-time-spanner-label'>0.10s</span>
+            <button class='btn mm-time-spanner-btn' data-span='0.1'>&gt;</button>
+        </div>
+        <div class='mm-time-spanner'>
+            <button class='btn mm-time-spanner-btn' data-span='-0.5'>&lt;</button>
+            <span class='mm-time-spanner-label'>0.50s</span>
+            <button class='btn mm-time-spanner-btn' data-span='0.5'>&gt;</button>
+        </div>
+        <div class='mm-time-spanner'>
+            <button class='btn mm-time-spanner-btn' data-span='-1'>&lt;</button>
+            <span class='mm-time-spanner-label'>1.00s</span>
+            <button class='btn mm-time-spanner-btn' data-span='1'>&gt;</button>
+        </div>
+        <p style='clear: both; text-align: center'><span class='edit-segment-frame-time'></span> 时间点上的画面</p>
+        <button class='btn btn-primary input-block-level' id='edit-segment-use-as-start'>使用该时间作为片段开始</button>
+
+        <button class='btn btn-primary input-block-level' id='edit-segment-play' style='margin-top: 20px'>播放这个视频</button>
     </div>
+</div>
+
+<div id='play-video-panel' style='display: none'>
+    <p style='float: left; margin-left: 6px'>播放视频</p>
+    <div style='float: right'><button id='video-play-quit' class='btn btn-danger'>X</button></div>
+    <video id='video-player' controls='controls' autoplay='autoplay' style='width: 800px; height: 450px; display: block; margin: auto;'>你的浏览器 OUT 了, 居然还不支持直接播放视频, 赶紧换 Chrome 吧</video>
+
+    <button class='btn btn-primary input-block-level' id='play-video-use-time'>使用当前画面作为片段开始</button>
 </div>

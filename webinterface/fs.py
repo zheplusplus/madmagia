@@ -1,6 +1,8 @@
 import os
 import sys
 import json
+import shutil
+
 import app
 
 try:
@@ -70,3 +72,9 @@ def ls(r):
 @app.post_async('/mkdir')
 def mkdir(r):
     return _mkdir(r.form['path'])
+
+
+@app.post_async('/clearcached')
+def clear_cached(r):
+    shutil.rmtree(app.temp_dir)
+    app.sure_mkdir(app.temp_dir)

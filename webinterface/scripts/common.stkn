@@ -116,3 +116,5 @@ export mad.formatTime: (num):
     r.push('.')
     r.push(ms)
     return r.join('')
+
+export mad.clearCached: (): jQuery.post('/clearcached', {}, %)

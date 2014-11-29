@@ -6,11 +6,20 @@ from cgi import parse_qs
 import json
 import flask
 import werkzeug.exceptions
+import tempfile
+
 from madmagia.config import config
 
 
+def sure_mkdir(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+
 base_dir = os.path.dirname(__file__)
-app = flask.Flask('MadMagia', static_folder=os.path.join(base_dir, 'static'))
+static_dir = os.path.join(base_dir, 'static')
+temp_dir = os.path.join(tempfile.gettempdir(), 'madmagia')
+sure_mkdir(temp_dir)
+app = flask.Flask('MadMagia', static_folder=static_dir)
 app.debug = 1
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 

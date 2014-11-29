@@ -32,7 +32,7 @@ func newSegment(epnum, start, duration, filters, parent)
                          click(():
                              if !jQuery(parent).hasClass('in-edit')
                                 return
-                             mad.edit.editSegment(@, findSourceByEpnum(@epnum), proj.getOutputPath(), %s)
+                             mad.edit.editSegment(@, %s)
                              if s
                                  set(s.epnum, s.start, s.duration, s.filters)
                          )[0]
@@ -64,7 +64,7 @@ func newSection(name, start)
     func addSegmentButton()
         btn: mad.createPriButton(_t_('new_segment')).addClass('ws-add-segment')
         btn.click(():
-            mad.edit.createSegment(findSourceByEpnum(@epnum), proj.getOutputPath(), %s)
+            mad.edit.createSegment(%s)
             if s
                 div.addSegment(newSegment(s.epnum, s.start, s.duration, s.filters, div))
         )
@@ -115,12 +115,6 @@ if workspace.videoList.length = 0
 workspace.videoList.sort((a, b): a.epnum - b.epnum)
 mad.edit.syncEpnums(workspace.videoList |: $.epnum)
 
-func findSourceByEpnum(epnum)
-    return (workspace.videoList |:
-        if $.epnum = epnum
-            $result.push($.path)
-    )[0]
-
 getSequence(proj.getOutputPath(), %%) |:
     sec: newSection($.name, $.start)
     segsCell.append(sec)
@@ -144,3 +138,8 @@ func saveCurrentProjct()
     }, %r)
 
 export mad.workspace.save: saveCurrentProjct
+export mad.workspace.findSourceByEpnum: (epnum): (workspace.videoList |:
+    if $.epnum = epnum
+        $result.push($.path)
+)[0]
+export mad.workspace.getOutputPath: (): proj.getOutputPath()

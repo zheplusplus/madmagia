@@ -82,18 +82,24 @@ def save_frame(time, epnum):
         os.path.join(FRAME_OUTPUT_DIR, '%s_%f.png' % (epnum, time)))
 
 
-def save_frame_to(time, source_file, output_file):
+def save_frame_to(time, source_file, output_file, resolution=None):
     if os.path.exists(output_file):
+        logger.debug('Cached image %s', output_file)
         return output_file
-    p = shell.execute(
+    args = [
         config['avconv'],
         '-ss', str(time),
         '-i', source_file,
         '-vsync', '1',
         '-t', '0.01',
-        output_file)
+    ]
+    if resolution is not None:
+        args.extend(['-s', '%dx%d' % (resolution[0], resolution[1])])
+    args.append(output_file)
+    p = shell.execute(*args)
     if p.returncode != 0 and 'filename number 2 from pattern' not in p.stderr:
         raise ValueError(p.stderr)
+    logger.debug('Generated image %s', output_file)
     return output_file
 
 
