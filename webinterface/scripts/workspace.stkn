@@ -32,7 +32,7 @@ func newSegment(epnum, start, duration, filters, parent)
                          click(():
                              if !jQuery(parent).hasClass('in-edit')
                                 return
-                             mad.edit.editSegment(@, %s)
+                             mad.edit.editSegment(@, parent.duration(), %s)
                              if s
                                  set(s.epnum, s.start, s.duration, s.filters)
                          )[0]
@@ -58,36 +58,128 @@ func newSegment(epnum, start, duration, filters, parent)
         )
 
     set(epnum, start, duration, filters)
+    div.tojson: (): {
+        epnum: div.epnum,
+        start: div.start,
+        duration: div.duration,
+        filters: div.filters,
+    }
     return div
 
-func newSection(name, start)
+func newSection(name, start, sub)
     func addSegmentButton()
         btn: mad.createPriButton(_t_('new_segment')).addClass('ws-add-segment')
         btn.click(():
-            mad.edit.createSegment(%s)
+            mad.edit.createSegment(sec.duration(), %s)
             if s
-                div.addSegment(newSegment(s.epnum, s.start, s.duration, s.filters, div))
+                sec.addSegment(newSegment(s.epnum, s.start, s.duration, s.filters, sec), btn)
         )
         return btn
 
     nameTag: jQuery('<div>').addClass('mm-sec-name').text(name)
     startTag: jQuery('<div>').addClass('mm-sec-start').text(mad.formatTime(start))
     editToggle: mad.createButton(_t_('section_toggle_edit')).css('float', 'right')
-    div: jQuery('<div>').addClass('mm-section').
+    subTag: jQuery('<p>').addClass('mm-sec-sub').text(sub)
+    segsDiv: jQuery('<div>').append(addSegmentButton())
+    playSecAudioBtn: mad.createPriButton(_t_('play_section_audio')).addClass('mm-section-preview')
+    playSecFirstBtn: mad.createPriButton(_t_('play_section_as_first')).addClass('mm-section-preview')
+    playSecLastBtn: mad.createPriButton(_t_('play_section_as_last')).addClass('mm-section-select')
+    playSecCancelBtn: mad.createDangerButton(_t_('play_section_cancel')).addClass('mm-section-select')
+    editSecBtn: mad.createPriButton(_t_('edit_section')).addClass('mm-section-edit')
+    addSecBtn: mad.createPriButton(_t_('new_section')).addClass('mm-section-insert')
+    delSecBtn: mad.createDangerButton(_t_('del_section')).addClass('mm-section-edit')
+    delConfirmBtn: mad.createDangerButton(_t_('del')).addClass('confirm-hidden')
+
+    sec: jQuery('<div>').addClass('mm-section').
                          append(nameTag).
                          append(startTag).
                          append(editToggle).
-                         append(jQuery('<div>').css('clear', 'both')).
-                         append(addSegmentButton())[0]
-    div.name: name
-    div.start: start
-    div.addSegment: (s): jQuery(@).append(s).append(addSegmentButton())
+                         append(subTag).
+                         append(segsDiv).
+                         append(jQuery('<hr>').addClass('edit-sec-sep')).
+                         append(playSecAudioBtn).
+                         append(playSecFirstBtn).
+                         append(playSecLastBtn).
+                         append(playSecCancelBtn).
+                         append(editSecBtn).
+                         append(addSecBtn).
+                         append(delSecBtn).
+                         append(delConfirmBtn)[0]
+    sec.name: name
+    sec.start: start
+    sec.sub: sub
+    sec.addSegment: (s, trigger):
+        delBtn: mad.createDangerButton(_t_('del')).addClass('mm-segment-del').click(():
+            me: jQuery(@)
+            me.prev().remove()
+            me.next().remove()
+            me.remove()
+        )
+        if trigger
+            jQuery(s).insertAfter(trigger)
+            delBtn.insertAfter(s)
+            return addSegmentButton().insertAfter(delBtn)
+        segsDiv.append(s).append(delBtn).append(addSegmentButton())
 
-    editToggle.click((): jQuery(div).toggleClass('in-edit'))
-    return div
+    unsetSelecting: (): jQuery('.mm-section').removeClass('mm-section-selecting')
+    editToggle.click(():
+        unsetSelecting()
+        jQuery(sec).toggleClass('in-edit').children().last().addClass('confirm-hidden')
+    )
+
+    playSecAudioBtn.click((): mad.player.audio(proj.getAudioPath(), proj.getOutputPath(), sec.start, sec.duration()))
+    latterSections: (): jQuery(sec).find('~ .mm-section')
+    playSecFirstBtn.click(():
+        unsetSelecting()
+        jQuery(sec).addClass('mm-section-selecting')
+        latterSections().addClass('mm-section-selecting')
+    )
+    playSecLastBtn.click(():
+        latterSections().removeClass('mm-section-selecting')
+        mad.player.section(jQuery('.mm-section-selecting') |: $, %)
+        unsetSelecting()
+    )
+    playSecCancelBtn.click(unsetSelecting)
+
+    editSecBtn.click(():
+        mad.edit.editSection(sec, %r)
+        if r
+            sec.name: r.name
+            sec.start: r.start
+            sec.sub: r.sub
+            nameTag.text(r.name)
+            startTag.text(mad.formatTime(r.start))
+            subTag.text(r.sub)
+    )
+    addSecBtn.click(():
+        mad.edit.createSection(sec, %r)
+        if r = null
+            return
+        newSec: jQuery(newSection(r.name, r.start, r.sub))
+        newSec.addClass('in-edit')
+        newSec.insertAfter(sec)
+        jQuery(sec).removeClass('in-edit')
+        saveCurrentProjct()
+    )
+    delSecBtn.click((): jQuery(@).next().toggleClass('confirm-hidden'))
+    delConfirmBtn.click((): jQuery(@).parent().remove())
+
+    sec.nextSection: (): jQuery(@).next()[0]
+    sec.prevSection: (): jQuery(@).prev()[0]
+    sec.duration: ():
+        next: @nextSection()
+        if next
+            return next.start - @start
+        return workspace.audioLen - @start
+    sec.end: (): @start + @duration()
+
+    sec.segments: (): jQuery(sec).find('.mm-segment') |: $
+    return sec
 
 jQuery(document.body).ready(%)
 jQuery('#workspace-tab').click(%)
+if jQuery('#workspace-tab').attr('aria-expanded') = 'true'
+    return
 
 jQuery('#save-workspace').hide()
 mad.projects.save(%%)
@@ -116,7 +208,7 @@ workspace.videoList.sort((a, b): a.epnum - b.epnum)
 mad.edit.syncEpnums(workspace.videoList |: $.epnum)
 
 getSequence(proj.getOutputPath(), %%) |:
-    sec: newSection($.name, $.start)
+    sec: newSection($.name, $.start, $.sub)
     segsCell.append(sec)
     $.segments |: sec.addSegment(newSegment($.epnum, $.start, $.duration, $.filters, sec))
 
@@ -128,12 +220,7 @@ func saveCurrentProjct()
         sections: JSON.stringify(jQuery('.mm-section') |: {
             name: $.name,
             start: $.start,
-            segments: jQuery($).find('.mm-segment') |: {
-                epnum: $.epnum,
-                start: $.start,
-                duration: $.duration,
-                filters: $.filters,
-            }
+            segments: $.segments() |: $.tojson()
         }),
     }, %r)
 
@@ -143,3 +230,6 @@ export mad.workspace.findSourceByEpnum: (epnum): (workspace.videoList |:
         $result.push($.path)
 )[0]
 export mad.workspace.getOutputPath: (): proj.getOutputPath()
+export mad.workspace.getAudioPath: (): proj.getAudioPath()
+export mad.workspace.getVideoPath: (): proj.getVideoPath()
+export mad.workspace.audioLen: (): workspace.audioLen

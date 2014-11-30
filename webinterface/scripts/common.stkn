@@ -79,6 +79,7 @@ func lsdir(paths, dirOnly, cb)
 
 export mad.createButton: (text): jQuery('<button>').addClass('btn').text(text)
 export mad.createPriButton: (text): mad.createButton(text).addClass('btn-primary')
+export mad.createDangerButton: (text): mad.createButton(text).addClass('btn-danger')
 
 export mad.createCentralPara: (text): jQuery('<p>').css('text-align', 'center').text(text)
 

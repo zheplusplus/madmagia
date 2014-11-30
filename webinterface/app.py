@@ -9,6 +9,7 @@ import werkzeug.exceptions
 import tempfile
 
 from madmagia.config import config
+from madmagia.pathutil import PATH_ENCODING
 
 
 def sure_mkdir(path):
@@ -25,7 +26,14 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 bin_dir = os.path.join(base_dir, 'bin')
 config['avconv'] = os.path.join(bin_dir, 'ffmpeg', 'bin', 'avconv')
+config['mencoder'] = os.path.join(bin_dir, 'MPlayer', 'mencoder')
 #config['avconv'] = 'avconv'
+
+
+def path(p):
+    if isinstance(p, unicode):
+        return p.encode(PATH_ENCODING)
+    return str(p)
 
 
 # http://stackoverflow.com/a/11163649

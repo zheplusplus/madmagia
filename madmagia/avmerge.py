@@ -10,19 +10,23 @@ import shell
 OUTPUT_FILE = pathutil.fullpath('./output/output.mp4')
 
 
-def _merge_sections(sections, audio_file):
-    video_file = video_slice.merge_segments(slice_partial(sections))
-
+def avmerge(audio_file, video_file, output_file=OUTPUT_FILE):
     logger.info('Zip video and audio')
-    pathutil.rm(OUTPUT_FILE)
+    pathutil.rm(output_file)
     p = shell.execute(
         config['avconv'],
         '-i', audio_file,
         '-i', video_file,
         '-c', 'copy',
-        OUTPUT_FILE)
+        output_file)
     if p.returncode != 0:
         raise ValueError('fail')
+    return output_file
+
+
+def _merge_sections(sections, audio_file):
+    video_file = video_slice.merge_segments(slice_partial(sections))
+    return avmerge(audio_file, video_file)
 
 
 def _find_sec(sections, sec_name):

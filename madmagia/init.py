@@ -64,4 +64,6 @@ def main():
 
 
 def clean():
+    pathutil.rm_all('output/audio')
     pathutil.rm_all('output/video')
+    pathutil.rm_all('output/frame')

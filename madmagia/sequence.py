@@ -11,12 +11,12 @@ class ParseError(ValueError):
 
 
 class Segment(object):
-    def __init__(self, epnum, start, duration, subt):
+    def __init__(self, epnum, start, duration, subt=None, filters=None):
         self.epnum = epnum
         self.start = start
         self.duration = duration
         self.subt = subt
-        self.filters = []
+        self.filters = filters or []
 
     def add_filter(self, f, args):
         self.filters.append((f, args))

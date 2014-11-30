@@ -2,21 +2,68 @@ _t_: mad.gettext
 
 jQuery(document).ready(%)
 
-player: jQuery('#video-player')[0]
+vplayer: jQuery('#play-video-panel video')[0]
 
 func video(src, cb)
     videoDiv: jQuery('#play-video-panel').detach()
     panel: mad.createOverlapPanel().append(videoDiv.show())
 
     func quit(time)
-        player.src: ''
+        vplayer.src: ''
         videoDiv.detach()
         jQuery(document.body).append(videoDiv.hide())
         panel.quit()
         cb(time)
 
     jQuery('#video-play-quit').unbind('click').click((): quit(null))
-    jQuery('#play-video-use-time').unbind('click').click((): quit(player.currentTime))
-    player.src: '/video/?path=' + encodeURIComponent(src)
+    jQuery('#play-video-use-time').unbind('click').click((): quit(vplayer.currentTime))
+    vplayer.src: '/video/?path=' + encodeURIComponent(src)
+
+aplayer: jQuery('#play-audio-panel audio')[0]
+
+func audio(file, output_dir, start, duration)
+    audioDiv: jQuery('#play-audio-panel').detach()
+    panel: mad.createOverlapPanel().append(audioDiv.show())
+
+    func quit()
+        aplayer.src: ''
+        audioDiv.detach()
+        jQuery(document.body).append(audioDiv.hide())
+        panel.quit()
+
+    jQuery('#audio-play-quit').unbind('click').click((): quit())
+
+    jQuery.post('/audio/slice', {file: file, start: start, duration: duration, output_dir: output_dir}, %r)
+    aplayer.src: '/audio/?path=' + encodeURIComponent(r)
+
+secplayer: jQuery('#play-section-panel video')[0]
+
+func section(sections, cb)
+    avDiv: jQuery('#play-section-panel').detach()
+    panel: mad.createOverlapPanel().append(avDiv.show())
+
+    func quit()
+        secplayer.src: ''
+        avDiv.detach()
+        jQuery(document.body).append(avDiv.hide())
+        panel.quit()
+        cb()
+    jQuery('#section-play-quit').unbind('click').click((): quit())
+
+    console.log(sections)
+    segments: (sections |: $.segments()).reduce((x, y): x ++ y, [])
+    console.log(segments)
+    jQuery.post('/video/slice', {
+        start: sections[0].start,
+        end: sections[sections.length - 1].end(),
+        segments: JSON.stringify(segments |: $.tojson()),
+        audio: mad.workspace.getAudioPath(),
+        video_dir: mad.workspace.getVideoPath(),
+        output_dir: mad.workspace.getOutputPath(),
+    }, %r)
+    console.log('done', r)
+    secplayer.src: '/video/?path=' + encodeURIComponent(r)
 
 export mad.player.video: video
+export mad.player.audio: audio
+export mad.player.section: section

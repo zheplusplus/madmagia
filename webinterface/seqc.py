@@ -2,6 +2,7 @@ import os
 import json
 
 import madmagia.sequence
+from madmagia.config import logger
 import app
 
 
@@ -28,10 +29,12 @@ def get_sections(r):
     path = r.args['path']
     try:
         with open(os.path.join(path, 'sequence.txt'), 'r') as f:
-            sections = madmagia.sequence.parse(f.readlines())[0]
+            sections = madmagia.sequence.parse(
+                [unicode(ln, 'utf-8') for ln in f.readlines()])[0]
         return [_dump_section(s) for s in sections]
-    except StandardError:
-        return []
+    except StandardError, e:
+        logger.exception(e)
+        return [_dump_section(madmagia.sequence.Section(0, ':begin'))]
 
 
 def _write_segment(f, seg):

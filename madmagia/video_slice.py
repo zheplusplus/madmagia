@@ -8,7 +8,6 @@ import shell
 _vfilters = dict()
 VIDEO_OUTPUT_DIR = pathutil.fullpath(os.path.join('output', 'video'))
 FRAME_OUTPUT_DIR = pathutil.fullpath(os.path.join('output', 'frame'))
-MERGED_VIDEO = os.path.join(VIDEO_OUTPUT_DIR, 'merged.mp4')
 
 
 def _vfilter(f):
@@ -103,8 +102,8 @@ def save_frame_to(time, source_file, output_file, resolution=None):
     return output_file
 
 
-def _cut_segment(i, seg, source_files):
-    tmp_file = os.path.join(VIDEO_OUTPUT_DIR, 'segment_%s_%f_%f.mp4' % (
+def _cut_segment(i, seg, source_files, output_dir):
+    tmp_file = os.path.join(output_dir, 'segment_%s_%f_%f.mp4' % (
         seg.epnum, seg.start, seg.duration))
     if os.path.exists(tmp_file):
         logger.info('Cached segment: %d - %s', i, tmp_file)
@@ -158,26 +157,27 @@ def _apply_filters(tmp_file, i, seg):
     return output_file
 
 
-def slice_segments(source_files, segments):
+def slice_segments(source_files, segments, output_dir=VIDEO_OUTPUT_DIR):
     tmp_files = []
     for i, seg in enumerate(segments):
-        tmp_file = _cut_segment(i, seg, source_files)
+        tmp_file = _cut_segment(i, seg, source_files, output_dir)
         tmp_files.append(_apply_filters(tmp_file, i, seg))
         if (i + 1) % 20 == 0:
             logger.info('Produced segment %d / %d', i + 1, len(segments))
     return tmp_files
 
 
-def merge_segments(files):
+def merge_segments(files, output_dir=VIDEO_OUTPUT_DIR):
+    merged_video = os.path.join(output_dir, 'merged.mp4')
     if len(files) == 0:
         raise ValueError('no segments')
-    logger.info('Merging segments to %s', MERGED_VIDEO)
-    pathutil.rm(MERGED_VIDEO)
+    logger.info('Merging segments to %s', merged_video)
+    pathutil.rm(merged_video)
     p = shell.execute(
         config['mencoder'],
         '-ovc', 'copy',
-        '-o', MERGED_VIDEO,
+        '-o', merged_video,
         *files)
     if p.returncode != 0:
         raise ValueError('fail\n' + p.stderr)
-    return MERGED_VIDEO
+    return merged_video

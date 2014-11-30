@@ -12,9 +12,36 @@
     font-family: sans-serif;
 }
 
+hr {
+    clear: both;
+    width: 80%;
+    margin: auto;
+    margin-bottom: 6px;
+    margin-top: 6px;
+}
+
+video, audio {
+    clear: both;
+    width: 800px;
+    display: block;
+    margin: auto;
+}
+
+video {
+    height: 450px;
+}
+
+p, span {
+    word-wrap: break-word;
+}
+
 #myTab, #myTabContent {
     width: 800px;
     margin: auto;
+}
+
+.confirm-hidden {
+    display: none;
 }
 
 .overlay {
@@ -73,6 +100,48 @@
     margin: 6px;
 }
 
+.mm-sec-sub {
+    clear: both;
+    width: 90%;
+    margin-left: 8px;
+    text-overflow: ellipsis;
+}
+
+.in-edit .mm-section-preview {
+    display: none;
+}
+
+.mm-section-select {
+    display: none;
+    margin: 8px;
+}
+
+.mm-section-selecting .mm-section-select {
+    display: initial;
+}
+
+.edit-sec-sep {
+    display: none;
+}
+
+.in-edit .edit-sec-sep {
+    display: block;
+}
+
+.in-edit .mm-section-edit, .in-edit .mm-section-insert, .mm-section-preview {
+    display: inline-block;
+    width: 160px;
+    margin: 8px;
+}
+
+.mm-section-edit, .mm-section-insert {
+    display: none;
+}
+
+.mm-section:first-child .mm-section-edit {
+    visibility: hidden;
+}
+
 .ws-add-segment {
     margin-left: 80px;
     display: none;
@@ -83,6 +152,7 @@
 }
 
 .mm-segment {
+    display: inline-block;
     margin-left: 32px;
     margin-right: 6px;
     margin-top: 6px;
@@ -90,6 +160,8 @@
 
     border-left: 2px gray solid;
     background-color: #bbb;
+
+    width: 500px;
 }
 
 .in-edit .mm-segment {
@@ -101,6 +173,18 @@
 
 .in-edit .mm-segment:hover {
     background-color: #efe;
+}
+
+.mm-segment-del {
+    display: none;
+}
+
+.in-edit .mm-segment-del {
+    line-height: 12px;
+    font-size: 0.8em;
+    display: inline-block;
+    margin-bottom: 6px;
+    width: 36px;
 }
 
 .mm-seg-el {
@@ -138,10 +222,6 @@
     width: 80px;
     max-width: 110px;
     text-align: center;
-}
-
-p, span {
-    word-wrap: break-word;
 }
 </style>
 </head>
@@ -194,7 +274,7 @@ p, span {
 <div id='edit-segment-panel' style='display: none'>
     <h1 style='float: left; margin-left: 6px'>片段规格设置</h1>
     <div style='float: right'><button id='edit-segment-quit' class='btn btn-danger'>X</button></div>
-    <div style='clear: both'></div>
+    <div style='clear: both'>节长度为 <span id='edit-section-duration'></span>s</div>
     <table style='width: 280px; max-width: 280px; margin: 6px; float: left'>
         <tr>
             <td>所在话数</td>
@@ -228,7 +308,7 @@ p, span {
         <tr>
             <td colspan='2'>
                 <button class='btn btn-primary input-block-level' id='edit-segment-confirm'>确定</button>
-                <p id='edit-error-feedback' style='color: red'></p>
+                <p id='edit-seg-error-feedback' style='color: red'></p>
             </td>
         </tr>
     </table>
@@ -262,10 +342,59 @@ p, span {
     </div>
 </div>
 
+<div id='edit-section-panel' style='display: none'>
+    <h1 style='float: left; margin-left: 6px'>分节编辑</h1>
+    <div style='float: right'><button id='edit-section-quit' class='btn btn-danger'>X</button></div>
+    <hr style='clear: both;'>
+
+    <p style='text-align: center'>上一节开始于 <span id='edit-prev-section-start'></span></p>
+    <p style='text-align: center'>下一节开始于 <span id='edit-next-section-start'></span></p>
+
+    <table style='margin: auto; min-width: 80%'>
+        <tr>
+            <td style='min-width: 240px; width: 280px; max-width: 280px;'>节的名称<br><sub>一个代号; 与其他节不同; 不要包含冒号</sub></td>
+            <td><input id='edit-section-name' class='input-block-level'></td>
+        </tr>
+        <tr>
+            <td>开始时间<br><sub>须在上一节之后, 以及下一节之前</sub></td>
+            <td><input id='edit-section-start' class='input-block-level'></td>
+        </tr>
+        <tr>
+            <td>字幕<br><sub>可生成 SRT 字幕文件</sub></td>
+            <td><textarea id='edit-section-sub' class='input-block-level'></textarea></td>
+        </tr>
+        <tr>
+            <td colspan='2'>
+                <button class='btn btn-primary input-block-level' id='edit-section-confirm'>确定</button>
+                <p id='edit-sec-error-feedback' style='color: red'></p>
+            </td>
+        </tr>
+    </table>
+</div>
+
 <div id='play-video-panel' style='display: none'>
     <p style='float: left; margin-left: 6px'>播放视频</p>
     <div style='float: right'><button id='video-play-quit' class='btn btn-danger'>X</button></div>
-    <video id='video-player' controls='controls' autoplay='autoplay' style='width: 800px; height: 450px; display: block; margin: auto;'>你的浏览器 OUT 了, 居然还不支持直接播放视频, 赶紧换 Chrome 吧</video>
-
+    <video controls='controls' autoplay='autoplay'>你的浏览器 OUT 了, 居然还不支持直接播放视频, 赶紧换 Chrome 吧</video>
     <button class='btn btn-primary input-block-level' id='play-video-use-time'>使用当前画面作为片段开始</button>
+</div>
+
+<div id='play-audio-panel' style='display: none'>
+    <p style='float: left; margin-left: 6px'>播放音频</p>
+    <div style='float: right'><button id='audio-play-quit' class='btn btn-danger'>X</button></div>
+    <audio controls='controls' autoplay='autoplay'>你的浏览器 OUT 了, 居然还不支持直接播放音频, 赶紧换 Chrome 吧</audio>
+</div>
+
+<div id='play-section-panel' style='display: none'>
+    <p style='float: left; margin-left: 6px'>播放分节</p>
+    <div style='float: right'><button id='section-play-quit' class='btn btn-danger'>X</button></div>
+    <div id='play-section-warning' style='display: none'>
+        所选中的分节的总长度 (<span id='play-section-warning-sectotal'></span>)
+        与分节内片段的总长度 (<span id='play-section-warning-segtotal'></span>)
+        相差甚远, 确定要继续吗?
+        <div style='text-align: center'>
+            <button class='btn btn-danger'>继续, 就是这么任性</button>
+        </div>
+    </div>
+    <video controls='controls' autoplay='autoplay'>你的浏览器 OUT 了, 居然还不支持直接播放视频, 赶紧换 Chrome 吧</video>
 </div>
