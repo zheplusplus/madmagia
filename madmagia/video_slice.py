@@ -17,7 +17,7 @@ def _vfilter(f):
 
 @_vfilter
 def _repeatframe(i, seg, inp, args):
-    image = save_frame(seg.start, seg.epnum)
+    image = save_frame_to(0, inp, inp + '_rf.png')
     if image is None:
         raise ValueError('process fail at %d : %s' % (i, p.stderr))
     tmp_file = inp + '_repeat_frame.mp4'

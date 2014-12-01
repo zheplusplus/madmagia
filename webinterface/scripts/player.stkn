@@ -50,9 +50,7 @@ func section(sections, cb)
         cb()
     jQuery('#section-play-quit').unbind('click').click((): quit())
 
-    console.log(sections)
     segments: (sections |: $.segments()).reduce((x, y): x ++ y, [])
-    console.log(segments)
     jQuery.post('/video/slice', {
         start: sections[0].start,
         end: sections[sections.length - 1].end(),
@@ -61,7 +59,6 @@ func section(sections, cb)
         video_dir: mad.workspace.getVideoPath(),
         output_dir: mad.workspace.getOutputPath(),
     }, %r)
-    console.log('done', r)
     secplayer.src: '/video/?path=' + encodeURIComponent(r)
 
 export mad.player.video: video
