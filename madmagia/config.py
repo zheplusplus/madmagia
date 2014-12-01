@@ -29,7 +29,7 @@ def _logger(c):
     logfile = _get_config(c, 'logging', 'file', None)
     if not logfile:
         logfile = os.path.join(tempfile.gettempdir(),
-                               datetime.now().strftime('mmtmp_%Y-%m-%d.log'))
+                               datetime.now().strftime('mmlog_%Y-%m-%d.log'))
     handler = logging.FileHandler(logfile)
     logger.addHandler(handler)
     handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))

@@ -1,5 +1,6 @@
 import os
 import re
+from pydub import AudioSegment
 
 from config import config
 import pathutil
@@ -26,15 +27,8 @@ def _audio_from_to(input_file, ext, start, end, output_dir):
         'audio_', str(start), '-', str(end), ext]))
     if pathutil.isfile(output_path):
         return output_path
-    p = shell.execute(
-        config['avconv'],
-        '-ss', str(start),
-        '-i', input_file,
-        '-t', str(end - start),
-        output_path)
-    if p.returncode != 0:
-        raise ValueError('Fail to produce audio %f-%f:\n%s' %
-                         (start, end, p.stderr))
+    AudioSegment.from_mp3(input_file)[
+        int(start * 1000): int(end * 1000)].export(output_path, format='mp3')
     return output_path
 
 
