@@ -3,6 +3,7 @@ import flask
 import tempfile
 import urllib
 import json
+import time
 
 import madmagia.audio_slice
 import madmagia.video_slice
@@ -78,7 +79,8 @@ def video_slice(r):
     audio_seg = madmagia.audio_slice.slice(
         audio_file, time_start, time_end, output_dir)
     return madmagia.avmerge.avmerge(
-        audio_seg, merged_video, os.path.join(output_dir, 'output.mp4'))
+        audio_seg, merged_video, os.path.join(
+            output_dir, 'output-%d.mp4' % time.time()), 'libx264')
 
 
 @app.post_async('/frame/gen')

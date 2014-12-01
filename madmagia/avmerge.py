@@ -10,14 +10,16 @@ import shell
 OUTPUT_FILE = pathutil.fullpath('./output/output.mp4')
 
 
-def avmerge(audio_file, video_file, output_file=OUTPUT_FILE):
+def avmerge(audio_file, video_file, output_file=OUTPUT_FILE,
+            force_encoder=None):
     logger.info('Zip video and audio')
     pathutil.rm(output_file)
     p = shell.execute(
         config['avconv'],
         '-i', audio_file,
         '-i', video_file,
-        '-c', 'copy',
+        '-acodec', 'copy',
+        '-vcodec', 'copy' if force_encoder is None else force_encoder,
         output_file)
     if p.returncode != 0:
         raise ValueError('fail')
