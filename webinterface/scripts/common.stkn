@@ -115,6 +115,10 @@ export mad.formatTime: (num):
         r.push('0')
     r.push(s)
     r.push('.')
+    if ms < 100
+        r.push('0')
+    if ms < 10
+        r.push('0')
     r.push(ms)
     return r.join('')
 
