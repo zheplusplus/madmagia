@@ -245,6 +245,9 @@ p, span {
         <td id='ws-segs' style='width: 600px; vertical-align: top'></td>
         <td id='ws-action' style='max-width: 200px; width: 200px; vertical-align: top'>
           <button id='save-workspace' onclick='mad.workspace.save()' class='btn btn-primary input-block-level' style='margin-bottom: 40px; height: 64px; font-size: 1.6em'>保存当前项目</button>
+          <div>
+              在预览/新建分节之后会自动保存
+          </div>
 
           <button class='btn input-block-level collapse-trigger'>
             音频信息
@@ -338,7 +341,7 @@ p, span {
         <p style='clear: both; text-align: center'><span class='edit-segment-frame-time'></span> 时间点上的画面</p>
         <button class='btn btn-primary input-block-level' id='edit-segment-use-as-start'>使用该时间作为片段开始</button>
 
-        <button class='btn btn-primary input-block-level' id='edit-segment-play' style='margin-top: 20px'>播放这个视频</button>
+        <button class='btn btn-primary input-block-level' id='edit-segment-play' style='margin-top: 20px; display: none'>播放这个视频</button>
     </div>
 </div>
 
@@ -388,6 +391,9 @@ p, span {
 <div id='play-section-panel' style='display: none'>
     <p style='float: left; margin-left: 6px'>播放分节</p>
     <div style='float: right'><button id='section-play-quit' class='btn btn-danger'>X</button></div>
+    <div>
+        剪辑这一段视频可能需要相当长的时间, 请耐心等待...
+    </div>
     <div id='play-section-warning' style='display: none'>
         所选中的分节的总长度 (<span id='play-section-warning-sectotal'></span>)
         与分节内片段的总长度 (<span id='play-section-warning-segtotal'></span>)

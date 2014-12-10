@@ -135,6 +135,7 @@ func newSection(name, start, sub)
         latterSections().addClass('mm-section-selecting')
     )
     playSecLastBtn.click(():
+        saveCurrentProjct()
         latterSections().removeClass('mm-section-selecting')
         mad.player.section(jQuery('.mm-section-selecting') |: $, %)
         unsetSelecting()

@@ -40,6 +40,9 @@ func editSegment(segment, sectionDuration, cb)
     editDiv: jQuery('#edit-segment-panel').detach()
     panel: mad.createOverlapPanel().append(editDiv.show())
 
+    editDiv.find(':checkbox').attr('checked', false)
+    editDiv.find('input').val('')
+
     func quit()
         editDiv.detach()
         jQuery(document.body).append(editDiv.hide())
