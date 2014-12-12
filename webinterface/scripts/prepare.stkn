@@ -1,4 +1,3 @@
 jQuery(document).ready(%)
 
 jQuery('.collapse-trigger').click((): jQuery(@).next().slideToggle())
-jQuery('#edit-segment-fillspan-cb').change((): jQuery('#edit-segment-fillspan-in').prop('disabled', !@checked))

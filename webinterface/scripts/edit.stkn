@@ -2,12 +2,14 @@ _t_: mad.gettext
 
 jQuery(document).ready(%)
 
+jQuery('#edit-segment-fillspan-cb').change((): jQuery('#edit-segment-fillspan-in').prop('disabled', !@checked))
+
 SELECT_FILTERS: {
-    hflip: (): jQuery('#edit-segment-hflip-cb').attr('checked', 'checked'),
-    repeatframe: (): jQuery('#edit-segment-repeatframe-cb').attr('checked', 'checked'),
+    hflip: (): jQuery('#edit-segment-hflip-cb').prop('checked', true),
+    repeatframe: (): jQuery('#edit-segment-repeatframe-cb').prop('checked', true),
     fillspan: (t):
-        jQuery('#edit-segment-fillspan-cb').attr('checked', 'checked')
-        jQuery('#edit-segment-fillspan-in').val(t)
+        jQuery('#edit-segment-fillspan-cb').prop('checked', true)
+        jQuery('#edit-segment-fillspan-in').prop('disabled', false).val(t)
     ,
 }
 
@@ -40,8 +42,9 @@ func editSegment(segment, sectionDuration, cb)
     editDiv: jQuery('#edit-segment-panel').detach()
     panel: mad.createOverlapPanel().append(editDiv.show())
 
-    editDiv.find(':checkbox').attr('checked', false)
+    editDiv.find(':checkbox').prop('checked', false)
     editDiv.find('input').val('')
+    jQuery('#edit-segment-fillspan-in').prop('disabled', true)
 
     func quit()
         editDiv.detach()
