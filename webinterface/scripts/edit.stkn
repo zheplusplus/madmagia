@@ -82,6 +82,9 @@ func editSegment(segment, sectionDuration, cb)
             if sf
                 sf($[1])
 
+    if !segment || segment.start != mad.parseTime(mad.formatTime(frameTime.time))
+        jQuery('#edit-segment-use-as-start').addClass('btn-primary')
+
 func currentVideoFile()
     epnum: parseFloat(jQuery('#edit-segment-epnum-selector :selected').val())
     return [epnum, mad.workspace.findSourceByEpnum(epnum)]
@@ -99,7 +102,13 @@ func displayFrame(time)
     img.attr('src', '/frame/?path=' + encodeURIComponent(r))
 
 jQuery('#edit-segment-epnum-selector').change((): frameTime.incTime(0))
-jQuery('.mm-time-spanner-btn').click((): frameTime.incTime(jQuery(@).data('span')))
+jQuery('.mm-time-spanner-btn').click(():
+    frameTime.incTime(jQuery(@).data('span'))
+    if frameTime.time != mad.parseTime(segStartInput.val())
+        jQuery('#edit-segment-use-as-start').addClass('btn-primary')
+    else
+        jQuery('#edit-segment-use-as-start').removeClass('btn-primary')
+)
 jQuery('#edit-segment-use-as-start').click((): segStartInput.val(mad.formatTime(frameTime.time)))
 
 jQuery('#edit-segment-play').click(():
