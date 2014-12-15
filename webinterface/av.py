@@ -65,17 +65,22 @@ def listen_audio():
 
 @app.post_async('/video/slice')
 def video_slice(r):
-    time_start = float(r.form['start'])
-    time_end = float(r.form['end'])
-    audio_file = r.form['audio']
-    segments = [madmagia.sequence.Segment(**s)
-                for s in json.loads(r.form['segments'])]
+    segment = madmagia.sequence.Segment(**json.loads(r.form['segment']))
     input_files = madmagia.files.input_videos(
         r.form['video_dir'], ['mkv', 'mov', 'mp4'])
     output_dir = _temp_dir(r.form['output_dir'])
+    return madmagia.video_slice.slice_segment(0, segment, input_files,
+                                              output_dir)
+
+
+@app.post_async('/video/merge')
+def video_merge(r):
+    time_start = float(r.form['start'])
+    time_end = float(r.form['end'])
+    audio_file = r.form['audio']
+    output_dir = _temp_dir(r.form['output_dir'])
     merged_video = madmagia.video_slice.merge_segments(
-        madmagia.video_slice.slice_segments(
-            input_files, segments, output_dir), output_dir)
+        json.loads(r.form['segments']), output_dir)
     audio_seg = madmagia.audio_slice.slice(
         audio_file, time_start, time_end, output_dir)
     return madmagia.avmerge.avmerge(

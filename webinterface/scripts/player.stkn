@@ -49,14 +49,23 @@ func section(sections, cb)
         panel.quit()
         cb()
     jQuery('#section-play-quit').unbind('click').click((): quit())
+    statusLabel: jQuery('#slicing-status')
 
     segments: (sections |: $.segments()).reduce((x, y): x ++ y, [])
-    jQuery.post('/video/slice', {
+    seg_files: segments |:
+        statusLabel.text(_t_('slicing_segment') + ' #' + $i)
+        jQuery.post('/video/slice', {
+            segment: JSON.stringify($.tojson()),
+            video_dir: mad.workspace.getVideoPath(),
+            output_dir: mad.workspace.getOutputPath(),
+        }, %r)
+        $result.push(r)
+    statusLabel.text(_t_('merging_segments'))
+    jQuery.post('/video/merge', {
         start: sections[0].start,
         end: sections[sections.length - 1].end(),
-        segments: JSON.stringify(segments |: $.tojson()),
+        segments: JSON.stringify(seg_files),
         audio: mad.workspace.getAudioPath(),
-        video_dir: mad.workspace.getVideoPath(),
         output_dir: mad.workspace.getOutputPath(),
     }, %r)
     secplayer.src: '/video/?path=' + encodeURIComponent(r)

@@ -129,7 +129,13 @@ def _cut_segment(i, seg, source_files, output_dir):
     return tmp_file
 
 
+def slice_segment(i, seg, source_files, output_dir):
+    return _apply_filters(_cut_segment(i, seg, source_files, output_dir),
+                          i, seg)
+
+
 def _apply_filters(tmp_file, i, seg):
+    print seg.filters
     for vfilter_args in seg.filters:
         vfilter = vfilter_args[0].lower()
         args = vfilter_args[1]
@@ -160,8 +166,7 @@ def _apply_filters(tmp_file, i, seg):
 def slice_segments(source_files, segments, output_dir=VIDEO_OUTPUT_DIR):
     tmp_files = []
     for i, seg in enumerate(segments):
-        tmp_file = _cut_segment(i, seg, source_files, output_dir)
-        tmp_files.append(_apply_filters(tmp_file, i, seg))
+        tmp_files.append(slice_segment(i, seg, source_files, output_dir))
         if (i + 1) % 20 == 0:
             logger.info('Produced segment %d / %d', i + 1, len(segments))
     return tmp_files

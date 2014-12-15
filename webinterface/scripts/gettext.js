@@ -30,12 +30,17 @@ window.mad.gettext = function(t) {
         seg_filter_fillspan: '拉伸/压缩视频长度至',
         seg_filter_repeatframe: '单画面定格',
         seg_filter_hflip: '水平翻转',
+
         edit_invalid_time: '不正确的时间格式',
         edit_invalid_num: '不正确的数值格式',
         bad_section_name: '不正确的分节名称',
         bad_section_name: '不正确的分节名称',
         section_name_exists: '此分节已存在',
         section_time_out_of_range: '分节开始时间越界',
+
+        slicing_segment: '正在准备片段',
+        merging_segments: '正在合并片段 请耐心等待',
+
         '': ''
     }[t] || t;
 };
