@@ -93,9 +93,10 @@ def _section(i, arg, sections, section_names):
         name = args[1]
         if ':' in name:
             raise ParseError('Invalid section name', i, name)
-        if name in section_names:
-            raise ParseError('Duplicated section name', i, name)
-        section_names.add(name)
+        if section_names is not None:
+            if name in section_names:
+                raise ParseError('Duplicated section name', i, name)
+            section_names.add(name)
 
     sub = ' '.join(args[2:])
     sections.append(Section(start, name, sub))
@@ -114,10 +115,10 @@ def _segment(line):
     return Segment(files.epnum(epn), start_time, float(dur), subt)
 
 
-def parse(sequence):
+def parse(sequence, check_dup):
     total_dur = 0
     sections = [Section(0, ':begin')]
-    section_names = set()
+    section_names = set() if check_dup else None
 
     for i, line in enumerate(sequence):
         line = line.strip()

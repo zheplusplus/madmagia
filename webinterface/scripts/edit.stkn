@@ -102,7 +102,7 @@ func displayFrame(time)
     img.attr('src', '/frame/?path=' + encodeURIComponent(r))
 
 jQuery('#edit-segment-epnum-selector').change((): frameTime.incTime(0))
-jQuery('.mm-time-spanner-btn').click(():
+jQuery('#edit-segment-panel .mm-time-spanner-btn').click(():
     frameTime.incTime(jQuery(@).data('span'))
     if frameTime.time != mad.parseTime(segStartInput.val())
         jQuery('#edit-segment-use-as-start').addClass('btn-primary')
@@ -117,10 +117,27 @@ jQuery('#edit-segment-play').click(():
         frameTime.setTime(r)
 )
 
-func editSection(section, prevSec, nextSec, cb)
+secError: (input, err):
+    input.focus()
+    jQuery('#edit-sec-error-feedback').text(err)
+
+secNameInput: jQuery('#edit-section-name')
+secStartInput: jQuery('#edit-section-start')
+secEndInput: jQuery('#edit-section-end')
+
+jQuery('#edit-section-start-spanners .mm-time-spanner-btn').click(():
+    secStartInput.incTime(jQuery(@).data('span'))
+)
+
+jQuery('#edit-section-end-spanners .mm-time-spanner-btn').click(():
+    secEndInput.incTime(jQuery(@).data('span'))
+)
+
+func editSection(section, prevSec, nextSec, audioPath, outputPath, cb)
     editDiv: jQuery('#edit-section-panel').detach()
     panel: mad.createOverlapPanel().append(editDiv.show())
 
+    console.log(audioPath, outputPath)
     func quit(sec)
         editDiv.detach()
         jQuery(document.body).append(editDiv.hide())
@@ -133,40 +150,72 @@ func editSection(section, prevSec, nextSec, cb)
     nextStart: nextSec.start if nextSec else mad.workspace.audioLen()
     jQuery('#edit-next-section-start').text(mad.formatTime(nextStart))
 
-    originName: section.name if section != null else null
-    secNameInput: jQuery('#edit-section-name')
-    secStartInput: jQuery('#edit-section-start')
+    jQuery('#edit-section-play-audio').unbind('click').click(():
+        mad.player.audio(audioPath, outputPath,
+                         secStartInput.timeVal(),
+                         secEndInput.timeVal() - secStartInput.timeVal())
+    )
+
+    secEndInput.val(mad.formatTime(nextStart))
+    secStartInput.timeVal: (): mad.parseTime(@val()) if @val() else prevSec.start
+    secEndInput.timeVal: (): mad.parseTime(@val())
+
+    secStartInput.incTime: (delta):
+        time: @timeVal() + delta
+        if isNaN(time)
+            return secError(@, _t_('edit_invalid_num'))
+        if time < prevSec.start
+            return @val(mad.formatTime(prevSec.start))
+        if time > secEndInput.timeVal()
+            return @val(secEndInput.val())
+        @val(mad.formatTime(time))
+
+    secEndInput.incTime: (delta):
+        time: mad.parseTime(@val()) + delta
+        if isNaN(time)
+            return secError(@, _t_('edit_invalid_num'))
+        if time < secStartInput.timeVal()
+            return @val(mad.formatTime(secStartInput.timeVal()))
+        if time > nextStart
+            return @val(mad.formatTime(nextStart))
+        @val(mad.formatTime(time))
+
     secSubInput: jQuery('#edit-section-sub')
-    secError: (input, err):
-        input.focus()
-        jQuery('#edit-sec-error-feedback').text(err)
     if section != null
         secNameInput.val(section.name)
         secStartInput.val(mad.formatTime(section.start))
         secSubInput.val(section.sub)
+    else
+        secNameInput.val(_t_('default_new_section_name_prefix') + *Date().getTime())
+
+    secNameInput.focus()
 
     jQuery('#edit-section-confirm').unbind('click').click(():
         name: secNameInput.val()
         if name.length = 0 || name.indexOf(':') != -1
             return secError(secNameInput, _t_('bad_section_name'))
-        if (jQuery('.mm-section') |? $.name = name && $.name != originName).length > 0
-            return secError(secNameInput, _t_('section_name_exists'))
         start: mad.parseTime(secStartInput.val())
         if isNaN(start)
             return secError(secStartInput, _t_('edit_invalid_num'))
-        if start >= nextStart || start < prevSec.start
+        end: mad.parseTime(secEndInput.val())
+        if isNaN(end)
+            return secError(secEndInput, _t_('edit_invalid_num'))
+        if start < prevSec.start || start >= end || end > nextStart
             return secError(secStartInput, _t_('section_time_out_of_range'))
         quit({
             name: name,
             start: start,
+            end: end,
             sub: secSubInput.val()
         })
     )
 
 export mad.edit.createSegment: (sectionDuration, cb): editSegment({}, sectionDuration, cb)
 export mad.edit.editSegment: editSegment
-export mad.edit.createSection: (triggerSec, cb): editSection(null, triggerSec, triggerSec.nextSection(), cb)
-export mad.edit.editSection: (sec, cb): editSection(sec, sec.prevSection(), sec.nextSection(), cb)
+export mad.edit.createSection: (triggerSec, audioPath, outputPath, cb): editSection(
+    null, triggerSec, triggerSec.nextSection(), audioPath, outputPath, cb)
+export mad.edit.editSection: (sec, audioPath, outputPath, cb): editSection(
+    sec, sec.prevSection(), sec.nextSection(), audioPath, outputPath, cb)
 export mad.edit.syncEpnums: (ls):
     s: jQuery('#edit-segment-epnum-selector').html('')
     ls |: s.append(jQuery('<option>').text($).val($))

@@ -24,17 +24,34 @@ def _dump_section(sec):
     }
 
 
-@app.get_async('/seqc/get/')
-def get_sections(r):
-    path = r.args['path']
+@app.post_async('/seqc/touch')
+def touch_sequence_file(r):
+    path = os.path.join(r.form['path'], 'sequence.txt')
+    if os.path.isfile(path):
+        return 'ok'
     try:
-        with open(os.path.join(path, 'sequence.txt'), 'r') as f:
-            sections = madmagia.sequence.parse(
-                [unicode(ln, 'utf-8') for ln in f.readlines()])[0]
-        return [_dump_section(s) for s in sections]
+        with open(path, 'a+'):
+            return 'ok'
     except StandardError, e:
         logger.exception(e)
-        return [_dump_section(madmagia.sequence.Section(0, ':begin'))]
+        return 'fail'
+
+
+@app.get_async('/seqc/get/')
+def get_sections(r):
+    path = os.path.join(r.args['path'], 'sequence.txt')
+    logger.info('Load from %s', path)
+    try:
+        with open(path, 'r') as f:
+            sections = madmagia.sequence.parse(
+                [unicode(ln, 'utf-8') for ln in f.readlines()], False)[0]
+        return [_dump_section(s) for s in sections]
+    except madmagia.sequence.ParseError, e:
+        logger.exception(e)
+        logger.error('Error at line %d', e.linenum)
+    except StandardError, e:
+        logger.exception(e)
+    return [_dump_section(madmagia.sequence.Section(0, ':begin'))]
 
 
 def _write_segment(f, seg):
@@ -45,7 +62,8 @@ def _write_segment(f, seg):
 
 def _write_section(f, sec):
     if sec['name'] != ':begin':
-        print >> f, ':section', sec['start'], sec['name'], sec.get('sub', '')
+        print >> f, ':section', sec['start'], sec['name'].encode(
+            'utf-8'), sec.get('sub', '')
     for s in sec['segments']:
         _write_segment(f, s)
     print >> f, ''
@@ -53,5 +71,7 @@ def _write_section(f, sec):
 
 @app.post_async('/seqc/save')
 def save_sequences(r):
-    with open(os.path.join(r.form['path'], 'sequence.txt'), 'w') as f:
+    path = os.path.join(r.form['path'], 'sequence.txt')
+    logger.info('Save to %s', path)
+    with open(path, 'w') as f:
         [_write_section(f, s) for s in json.loads(r.form['sections'])]

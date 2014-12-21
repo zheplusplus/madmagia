@@ -13,13 +13,7 @@ OUTPUT_DIR = pathutil.fullpath(os.path.join('output', 'audio'))
 
 
 def audio_len(f):
-    p = shell.execute(config['avconv'], '-i', f)
-    dur_match = _DURATION_RE.search(p.stderr)
-    if dur_match is None:
-        raise ValueError('Unsupported audio file ' + f)
-    dur_groups = dur_match.groupdict()
-    return (int(dur_groups['h']) * 60 * 60 + int(dur_groups['m']) * 60 +
-            float(dur_groups['s']))
+    return len(AudioSegment.from_mp3(f)) / 10 / 100.0
 
 
 def _audio_from_to(input_file, ext, start, end, output_dir):

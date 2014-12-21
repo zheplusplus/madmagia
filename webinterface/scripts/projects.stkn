@@ -1,7 +1,7 @@
 _t_: mad.gettext
 
 func createProj(projName, audio, videoDir, outputDir)
-    p: jQuery('<div>')
+    p: jQuery('<div>').addClass('project')
     radio: jQuery('<input>').attr('type', 'radio').attr('name', 'proj')
     audioPath: jQuery('<input>').val(audio).addClass('input-block-level')
     audioSelect: mad.createPriButton(_t_('select_file')).addClass('input-block-level')
@@ -15,7 +15,18 @@ func createProj(projName, audio, videoDir, outputDir)
     outputSelect: mad.createPriButton(_t_('select_dir')).addClass('input-block-level')
     outputSelect.click((): mad.selectDirFor(outputPath))
 
-    p.append(jQuery('<p>').append(jQuery('<label>').append(radio).append(jQuery('<span>').addClass('projname').text(projName)))).
+    p.append(jQuery('<p>').append(jQuery('<label>').css('display', 'inline-block').append(radio).append(jQuery('<span>').addClass('projname').text(projName))).
+                           append(mad.createDangerButton(_t_('del_proj')).css('float', 'right').click(():
+                               p.removeClass('project')
+                               audio: p[0].getAudioPath()
+                               video: p[0].getVideoPath()
+                               output: p[0].getOutputPath()
+                               p.html('').append(jQuery('<p>').text(_t_('project_removed'))).
+                                          append(jQuery('<p>').text(_t_('audio_path') + ': ' + audio)).
+                                          append(jQuery('<p>').text(_t_('video_path') + ': ' + video)).
+                                          append(jQuery('<p>').text(_t_('output_path') + ': ' + output))
+                               saveProjects((): null)
+                           ))).
       append(jQuery('<table>').css('width', '100%').append([
           jQuery('<tr>').append(jQuery('<td>').text(_t_('audio_path')).css('width', '28%')).
                          append(jQuery('<td>').append(audioSelect).css('width', '12%')).
@@ -26,12 +37,13 @@ func createProj(projName, audio, videoDir, outputDir)
           jQuery('<tr>').append(jQuery('<td>').text(_t_('output_path'))).
                          append(jQuery('<td>').append(outputSelect)).
                          append(jQuery('<td>').append(outputPath)),
-      ]))
+      ])).
+      append(jQuery('<hr>'))
     radio.attr('checked', 'checked')
     p[0].name: projName
-    p[0].getAudioPath: (): audioPath.val()
-    p[0].getVideoPath: (): videoPath.val()
-    p[0].getOutputPath: (): outputPath.val()
+    p[0].getAudioPath: (): audioPath.val().trim()
+    p[0].getVideoPath: (): videoPath.val().trim()
+    p[0].getOutputPath: (): outputPath.val().trim()
     radio[0].project: p[0]
     return p
 
@@ -49,7 +61,7 @@ jQuery('#projs').append(projNameInput).append(mad.createPriButton(_t_('new_proj'
 )).append(mad.createPriButton(_t_('save_projs')).click((): saveProjects((): null)))
 
 func saveProjects(%%)
-    jQuery.post('/saveprojs', JSON.stringify(jQuery('#projs-list').children() |: {
+    jQuery.post('/saveprojs', JSON.stringify(jQuery('#projs-list').find('.project') |: {
         name: $.name,
         audio: $.getAudioPath(),
         video: $.getVideoPath(),

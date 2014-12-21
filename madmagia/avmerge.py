@@ -57,7 +57,7 @@ def slice_partial(sections):
 
 def find_range(begin_sec_name, end_sec_name):
     with open(config['sequence'], 'r') as f:
-        sections, total_dur = sequence.parse(f.readlines())
+        sections, total_dur = sequence.parse(f.readlines(), True)
     begin_index, begin_section = _find_sec(sections, begin_sec_name)
     begin_time = begin_section.start
     end_time, sec_range = _interval_secs(sections, end_sec_name, begin_index)

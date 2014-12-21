@@ -78,7 +78,8 @@ func newSection(name, start, sub)
 
     nameTag: jQuery('<div>').addClass('mm-sec-name').text(name)
     startTag: jQuery('<div>').addClass('mm-sec-start').text(mad.formatTime(start))
-    editToggle: mad.createButton(_t_('section_toggle_edit')).css('float', 'right')
+    editEnable: mad.createButton(_t_('section_enable_edit')).addClass('section-edit-enable').css('float', 'right')
+    editDisable: mad.createButton(_t_('section_disable_edit')).addClass('section-edit-disable').css('float', 'right')
     subTag: jQuery('<p>').addClass('mm-sec-sub').text(sub)
     segsDiv: jQuery('<div>').append(addSegmentButton())
     playSecAudioBtn: mad.createPriButton(_t_('play_section_audio')).addClass('mm-section-preview')
@@ -90,10 +91,11 @@ func newSection(name, start, sub)
     delSecBtn: mad.createDangerButton(_t_('del_section')).addClass('mm-section-edit')
     delConfirmBtn: mad.createDangerButton(_t_('del')).addClass('confirm-hidden')
 
-    sec: jQuery('<div>').addClass('mm-section').
+    sec: jQuery('<div>').addClass('mm-section').addClass('in-edit').
                          append(nameTag).
                          append(startTag).
-                         append(editToggle).
+                         append(editEnable).
+                         append(editDisable).
                          append(subTag).
                          append(segsDiv).
                          append(jQuery('<hr>').addClass('edit-sec-sep')).
@@ -122,9 +124,13 @@ func newSection(name, start, sub)
         segsDiv.append(s).append(delBtn).append(addSegmentButton())
 
     unsetSelecting: (): jQuery('.mm-section').removeClass('mm-section-selecting')
-    editToggle.click(():
+    editEnable.click(():
         unsetSelecting()
-        jQuery(sec).toggleClass('in-edit').children().last().addClass('confirm-hidden')
+        jQuery(sec).addClass('in-edit').children().last().addClass('confirm-hidden')
+    )
+    editDisable.click(():
+        unsetSelecting()
+        jQuery(sec).removeClass('in-edit').children().last().addClass('confirm-hidden')
     )
 
     playSecAudioBtn.click((): mad.player.audio(proj.getAudioPath(), proj.getOutputPath(), sec.start, sec.duration()))
@@ -132,7 +138,7 @@ func newSection(name, start, sub)
     playSecFirstBtn.click(():
         unsetSelecting()
         jQuery(sec).addClass('mm-section-selecting')
-        latterSections().addClass('mm-section-selecting')
+        latterSections().removeClass('in-edit').addClass('mm-section-selecting')
     )
     playSecLastBtn.click(():
         saveCurrentProjct()
@@ -143,7 +149,7 @@ func newSection(name, start, sub)
     playSecCancelBtn.click(unsetSelecting)
 
     editSecBtn.click(():
-        mad.edit.editSection(sec, %r)
+        mad.edit.editSection(sec, proj.getAudioPath(), proj.getOutputPath(), %r)
         if r
             sec.name: r.name
             sec.start: r.start
@@ -151,15 +157,29 @@ func newSection(name, start, sub)
             nameTag.text(r.name)
             startTag.text(mad.formatTime(r.start))
             subTag.text(r.sub)
+
+            if r.end != sec.end()
+                jQuery(newSection(_t_('default_new_section_name_prefix') + *Date().getTime(),
+                                  r.end, '')
+                       ).insertAfter(sec)
+
+            saveCurrentProjct()
     )
     addSecBtn.click(():
-        mad.edit.createSection(sec, %r)
+        mad.edit.createSection(sec, proj.getAudioPath(), proj.getOutputPath(), %r)
         if r = null
             return
+        nextStart: sec.end()
         newSec: jQuery(newSection(r.name, r.start, r.sub))
         newSec.addClass('in-edit')
         newSec.insertAfter(sec)
         jQuery(sec).removeClass('in-edit')
+
+        if r.end != nextStart
+            jQuery(newSection(_t_('default_new_section_name_prefix') + *Date().getTime(),
+                              r.end, '')
+                   ).insertAfter(newSec)
+
         saveCurrentProjct()
     )
     delSecBtn.click((): jQuery(@).next().toggleClass('confirm-hidden'))
@@ -178,7 +198,8 @@ func newSection(name, start, sub)
     return sec
 
 jQuery(document.body).ready(%)
-jQuery('#workspace-tab').click(%)
+jQuery('#workspace-tab').click(%e)
+
 if jQuery('#workspace-tab').attr('aria-expanded') = 'true'
     return
 
@@ -198,6 +219,13 @@ jQuery('#ws-audio-path').text(proj.getAudioPath())
 jQuery('#ws-video-path').text(proj.getVideoPath())
 
 workspace.audioLen: getAVLen(proj.getAudioPath(), %%)
+if proj.getOutputPath() = ''
+    return segsCell.text(_t_('empty_output_dir'))
+
+jQuery.post('/seqc/touch', {path: proj.getOutputPath()}, %r)
+if r != 'ok'
+    return segsCell.text(_t_('bad_output_dir'))
+
 if workspace.audioLen = -1
     return segsCell.text(_t_('bad_audio'))
 jQuery('#ws-audio-len').text(mad.formatTime(workspace.audioLen))

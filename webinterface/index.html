@@ -107,6 +107,22 @@ p, span {
     text-overflow: ellipsis;
 }
 
+.section-edit-enable {
+    display: initial;
+}
+
+.in-edit .section-edit-enable {
+    display: none;
+}
+
+.section-edit-disable {
+    display: none;
+}
+
+.in-edit .section-edit-disable {
+    display: initial;
+}
+
 .in-edit .mm-section-preview {
     display: none;
 }
@@ -158,8 +174,8 @@ p, span {
     margin-top: 6px;
     margin-bottom: 6px;
 
-    border-left: 2px gray solid;
-    background-color: #bbb;
+    border-left: 2px #fd4 solid;
+    background-color: #ffd;
 
     width: 500px;
 }
@@ -346,23 +362,86 @@ p, span {
 </div>
 
 <div id='edit-section-panel' style='display: none'>
-    <h1 style='float: left; margin-left: 6px'>分节编辑</h1>
+    <h1 style='float: left; margin-left: 6px'>音频分节编辑</h1>
     <div style='float: right'><button id='edit-section-quit' class='btn btn-danger'>X</button></div>
     <hr style='clear: both;'>
 
-    <p style='text-align: center'>上一节开始于 <span id='edit-prev-section-start'></span></p>
-    <p style='text-align: center'>下一节开始于 <span id='edit-next-section-start'></span></p>
-
     <table style='margin: auto; min-width: 80%'>
         <tr>
-            <td style='min-width: 240px; width: 280px; max-width: 280px;'>节的名称<br><sub>一个代号; 与其他节不同; 不要包含冒号</sub></td>
+            <td style='min-width: 240px; width: 280px; max-width: 280px;'>节的名称<br><sub>给音频分节取个名字; 不要包含空格或冒号</sub></td>
             <td><input id='edit-section-name' class='input-block-level'></td>
         </tr>
+        <tr><td colspan='2'><hr></td></tr>
         <tr>
-            <td>开始时间<br><sub>须在上一节之后, 以及下一节之前</sub></td>
-            <td><input id='edit-section-start' class='input-block-level'></td>
+            <td style='text-align: right'>上一节开始于</td>
+            <td><span id='edit-prev-section-start'></span></td>
         </tr>
         <tr>
+            <td>设置本节开始时间<br><sub>须在上一节之后, 以及下一节之前</sub></td>
+            <td><input id='edit-section-start' class='input-block-level'></td>
+        </tr>
+        <tr id='edit-section-start-spanners'>
+            <td colspan='2'>
+                <div style='width: 400px; max-width: 400px; margin: auto'>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-0.05'>&lt;</button>
+                        <span class='mm-time-spanner-label'>0.05s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='0.05'>&gt;</button>
+                    </div>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-0.1'>&lt;</button>
+                        <span class='mm-time-spanner-label'>0.10s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='0.1'>&gt;</button>
+                    </div>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-0.5'>&lt;</button>
+                        <span class='mm-time-spanner-label'>0.50s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='0.5'>&gt;</button>
+                    </div>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-1'>&lt;</button>
+                        <span class='mm-time-spanner-label'>1.00s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='1'>&gt;</button>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr><td colspan='2'><hr></td></tr>
+        <tr>
+            <td style='text-align: right'>下一节开始于</td>
+            <td><span id='edit-next-section-start'></span></td>
+        </tr>
+            <td>设置本节结束时间<br><sub>也就是下一节开始的时间; 须在开始时间之后</sub></td>
+            <td><input id='edit-section-end' class='input-block-level'></td>
+        </tr>
+        <tr id='edit-section-end-spanners'>
+            <td colspan='2'>
+                <div style='width: 400px; max-width: 400px; margin: auto'>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-0.05'>&lt;</button>
+                        <span class='mm-time-spanner-label'>0.05s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='0.05'>&gt;</button>
+                    </div>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-0.1'>&lt;</button>
+                        <span class='mm-time-spanner-label'>0.10s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='0.1'>&gt;</button>
+                    </div>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-0.5'>&lt;</button>
+                        <span class='mm-time-spanner-label'>0.50s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='0.5'>&gt;</button>
+                    </div>
+                    <div class='mm-time-spanner'>
+                        <button class='btn mm-time-spanner-btn' data-span='-1'>&lt;</button>
+                        <span class='mm-time-spanner-label'>1.00s</span>
+                        <button class='btn mm-time-spanner-btn' data-span='1'>&gt;</button>
+                    </div>
+                    <button style='clear: both' class='btn input-block-level' id='edit-section-play-audio'>试听这个区间的音频</button>
+                </div>
+            </td>
+        </tr>
+        <tr style='display: none'>
             <td>字幕<br><sub>可生成 SRT 字幕文件</sub></td>
             <td><textarea id='edit-section-sub' class='input-block-level'></textarea></td>
         </tr>
