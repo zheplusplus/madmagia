@@ -37,6 +37,7 @@ window.mad.gettext = function(t) {
         seg_filter_repeatframe: '单画面定格',
         seg_filter_hflip: '水平翻转',
         default_new_section_name_prefix: '新分节-',
+        auto_created_section_name_prefix: '作为结束自动建立的分节-',
 
         edit_invalid_time: '不正确的时间格式',
         edit_invalid_num: '不正确的数值格式',

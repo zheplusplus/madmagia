@@ -159,7 +159,7 @@ func newSection(name, start, sub)
             subTag.text(r.sub)
 
             if r.end != sec.end()
-                jQuery(newSection(_t_('default_new_section_name_prefix') + *Date().getTime(),
+                jQuery(newSection(_t_('auto_created_section_name_prefix') + r.end,
                                   r.end, '')
                        ).insertAfter(sec)
 
@@ -176,7 +176,7 @@ func newSection(name, start, sub)
         jQuery(sec).removeClass('in-edit')
 
         if r.end != nextStart
-            jQuery(newSection(_t_('default_new_section_name_prefix') + *Date().getTime(),
+            jQuery(newSection(_t_('auto_created_section_name_prefix') + r.end,
                               r.end, '')
                    ).insertAfter(newSec)
 

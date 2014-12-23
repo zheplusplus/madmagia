@@ -41,6 +41,7 @@ secplayer: jQuery('#play-section-panel video')[0]
 func section(sections, cb)
     avDiv: jQuery('#play-section-panel').detach()
     panel: mad.createOverlapPanel().append(avDiv.show())
+    secplayer.src: ''
 
     func quit()
         secplayer.src: ''
@@ -51,7 +52,16 @@ func section(sections, cb)
     jQuery('#section-play-quit').unbind('click').click((): quit())
     statusLabel: jQuery('#slicing-status')
 
+    audio_start: sections[0].start
+    audio_end: sections[sections.length - 1].end()
+    jQuery('#play-section-pos').text(mad.formatTime(0) + ' / ' + mad.formatTime(audio_start))
+    jQuery('#play-section-sectotal').text(mad.formatTime(audio_end - audio_start))
+
     segments: (sections |: $.segments()).reduce((x, y): x ++ y, [])
+
+    jQuery('#play-section-segtotal').text(
+        mad.formatTime((segments |: $.duration).reduce((x, y): x + y, 0)))
+
     seg_files: segments |:
         statusLabel.text(_t_('slicing_segment') + ' #' + $i)
         jQuery.post('/video/slice', {
@@ -62,13 +72,32 @@ func section(sections, cb)
         $result.push(r)
     statusLabel.text(_t_('merging_segments'))
     jQuery.post('/video/merge', {
-        start: sections[0].start,
-        end: sections[sections.length - 1].end(),
+        start: audio_start,
+        end: audio_end,
         segments: JSON.stringify(seg_files),
         audio: mad.workspace.getAudioPath(),
         output_dir: mad.workspace.getOutputPath(),
     }, %r)
     secplayer.src: '/video/?path=' + encodeURIComponent(r)
+
+    jQuery('#play-section-replay').unbind('click').click(():
+        src: secplayer.src
+        if !src
+            return
+        secplayer.src: ''
+        secplayer.src: src
+    )
+    jQuery('#play-section-pause').unbind('click').click(():
+        if !secplayer.src
+            return
+        if secplayer.paused
+            secplayer.play()
+        else
+            secplayer.pause()
+            jQuery('#play-section-pos').text(
+                mad.formatTime(secplayer.currentTime) +
+                ' / ' + mad.formatTime(secplayer.currentTime + audio_start))
+    )
 
 export mad.player.video: video
 export mad.player.audio: audio
