@@ -10,7 +10,7 @@ import madmagia.video_slice
 import madmagia.avmerge
 import madmagia.sequence
 import madmagia.files
-from madmagia.config import logger
+from madmagia.config import logger, config
 import app
 
 
@@ -65,6 +65,8 @@ def listen_audio():
 
 @app.post_async('/video/slice')
 def video_slice(r):
+    config['bitrate'] = '1.6M'
+    config['resolution'] = '800:450'
     segment = madmagia.sequence.Segment(**json.loads(r.form['segment']))
     input_files = madmagia.files.input_videos(
         r.form['video_dir'], ['mkv', 'mov', 'mp4'])
@@ -86,6 +88,34 @@ def video_merge(r):
     return madmagia.avmerge.avmerge(
         audio_seg, merged_video, os.path.join(
             output_dir, 'output-%d.mp4' % time.time()), 'libx264')
+
+
+@app.post_async('/video/slice_export')
+def video_slice_export(r):
+    config['bitrate'] = '16M'
+    config['resolution'] = '1280:720'
+    segment = madmagia.sequence.Segment(**json.loads(r.form['segment']))
+    input_files = madmagia.files.input_videos(
+        r.form['video_dir'], ['mkv', 'mov', 'mp4'])
+    output_dir = _temp_dir(r.form['output_dir']) + '.export'
+    app.sure_mkdir(output_dir)
+    return madmagia.video_slice.slice_segment(0, segment, input_files,
+                                              output_dir)
+
+
+@app.post_async('/video/merge_export')
+def video_merge_export(r):
+    time_start = float(r.form['start'])
+    time_end = float(r.form['end'])
+    audio_file = r.form['audio']
+    output_dir = r.form['output_dir']
+    merged_video = madmagia.video_slice.merge_segments(
+        json.loads(r.form['segments']), output_dir)
+    audio_seg = madmagia.audio_slice.slice(
+        audio_file, time_start, time_end, output_dir)
+    return madmagia.avmerge.avmerge(
+        audio_seg, merged_video, os.path.join(
+            output_dir, 'output-%d.mp4' % time.time()))
 
 
 @app.post_async('/frame/gen')

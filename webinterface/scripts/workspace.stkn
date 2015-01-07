@@ -78,7 +78,7 @@ func newSection(name, start, sub)
 
     nameTag: jQuery('<div>').addClass('mm-sec-name').text(name)
     startTag: jQuery('<div>').addClass('mm-sec-start').text(mad.formatTime(start))
-    editEnable: mad.createButton(_t_('section_enable_edit')).addClass('section-edit-enable').css('float', 'right')
+    editEnable: mad.createPriButton(_t_('section_enable_edit')).addClass('section-edit-enable').css('float', 'right')
     editDisable: mad.createButton(_t_('section_disable_edit')).addClass('section-edit-disable').css('float', 'right')
     subTag: jQuery('<p>').addClass('mm-sec-sub').text(sub)
     segsDiv: jQuery('<div>').append(addSegmentButton())

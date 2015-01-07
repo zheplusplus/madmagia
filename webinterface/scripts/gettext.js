@@ -47,6 +47,7 @@ window.mad.gettext = function(t) {
 
         slicing_segment: '正在准备片段',
         merging_segments: '正在合并片段 请耐心等待',
+        segments_exported: '视频已输出到本机硬盘',
 
         '': ''
     }[t] || t;
