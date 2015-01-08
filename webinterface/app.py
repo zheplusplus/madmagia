@@ -1,4 +1,5 @@
 import os
+import sys
 import types
 from cStringIO import StringIO
 import functools
@@ -21,13 +22,12 @@ static_dir = os.path.join(base_dir, 'static')
 temp_dir = os.path.join(tempfile.gettempdir(), 'madmagia')
 sure_mkdir(temp_dir)
 app = flask.Flask('MadMagia', static_folder=static_dir)
-app.debug = 1
+app.debug = len(sys.argv) == 1
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 bin_dir = os.path.join(base_dir, 'bin')
 config['avconv'] = os.path.join(bin_dir, 'ffmpeg', 'bin', 'avconv')
 config['mencoder'] = os.path.join(bin_dir, 'MPlayer', 'mencoder')
-#config['avconv'] = 'avconv'
 
 
 def path(p):
