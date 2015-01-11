@@ -135,7 +135,6 @@ def slice_segment(i, seg, source_files, output_dir):
 
 
 def _apply_filters(tmp_file, i, seg):
-    print seg.filters
     for vfilter_args in seg.filters:
         vfilter = vfilter_args[0].lower()
         args = vfilter_args[1]
