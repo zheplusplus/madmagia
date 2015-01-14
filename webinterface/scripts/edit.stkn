@@ -45,6 +45,7 @@ func editSegment(segment, sectionDuration, cb)
     editDiv.find(':checkbox').prop('checked', false)
     editDiv.find('input').val('')
     jQuery('#edit-segment-fillspan-in').prop('disabled', true)
+    jQuery('#edit-seg-error-feedback').text('')
 
     func quit()
         editDiv.detach()

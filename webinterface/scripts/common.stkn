@@ -5,10 +5,12 @@ PATH_SPLIT: *RegExp('[\\\\|/]')
 func createOverlapPanel()
     bg: jQuery('<div>').addClass('overlay')
     panel: jQuery('<div>').addClass('overlay-panel')
+    panel.active: true
     jQuery(document.body).append(bg).append(panel)
     panel.quit: ():
         bg.remove()
         panel.remove()
+        panel.active: false
     return panel
 
 func selectDiskObj(initPath, dirOnly, cb)
