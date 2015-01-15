@@ -11,13 +11,13 @@ try:
 
     def _fs_roots():
         roots = []
-		for i in xrange(24):
-			try:
-				os.listdir(string.uppercase[i + 2] + ':')
-				roots.append(string.uppercase[i + 2] + ':')
-			except WindowsError:
-				break
-		return roots
+	    for i in xrange(24):
+		    try:
+			    os.listdir(string.uppercase[i + 2] + ':')
+			    roots.append(string.uppercase[i + 2] + ':')
+	        except WindowsError:
+	            break
+	    return roots
         
 except ImportError:
     class WindowsError(OSError):
