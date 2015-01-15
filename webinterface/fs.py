@@ -10,27 +10,14 @@ try:
 
 
     def _fs_roots():
-        res = []
-        deviceID = ''
-        subKey = 'SYSTEM\MountedDevices'
-
-        key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, subKey)
-        i = 0
-        try:
-            while True:
-                name, value, type = _winreg.EnumValue(key, i)
-                if name.startswith('\\DosDevices\\'):
-                    res.append((name, repr(value)[1: 17]))
-                    if name.startswith('\\DosDevices\\C'):
-                        deviceID = repr(value)[1: 17]
-                i += 1
-        except WindowsError:
-            pass
-        res = filter(lambda item : item[1] == deviceID, res)
-        res = zip(*res)[0]
-        index = res[0].rindex('\\')
-        res = sorted([item[index + 1: -1] for item in res])
-        return [r + ':' for r in res]
+        roots = []
+        for i in xrange(24):
+            try:
+                os.listdir(string.uppercase[i + 2] + ':')
+                roots.append(string.uppercase[i + 2] + ':')
+            except WindowsError:
+                break
+        return roots
 except ImportError:
     class WindowsError(OSError):
         pass
