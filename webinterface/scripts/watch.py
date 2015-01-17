@@ -6,9 +6,12 @@ from watchdog.events import FileSystemEventHandler
 
 
 class Maker(FileSystemEventHandler):
+
     def on_modified(self, _):
+        Maker.lock = True
         print 'make'
-        subprocess.Popen('make')
+        p = subprocess.Popen('make')
+        p.wait()
 
 
 def main():

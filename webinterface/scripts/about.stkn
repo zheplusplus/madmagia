@@ -1,0 +1,10 @@
+export mad.about.showAbout: (cb):
+    aboutPanel: jQuery('#about-panel').detach()
+    panel: mad.createOverlapPanel().append(aboutPanel.show())
+
+    func quit()
+        aboutPanel.detach()
+        jQuery(document.body).append(aboutPanel.hide())
+        panel.quit()
+
+    jQuery('#about-quit').unbind('click').click(quit)

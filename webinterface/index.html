@@ -72,7 +72,8 @@ p, span {
     width: 180px;
     margin-right: 20px;
     margin-left: 5px;
-    min-height: 40px;
+    margin-bottom: 8px;
+    min-height: 80px;
 }
 
 .mm-section {
@@ -239,6 +240,10 @@ p, span {
     max-width: 110px;
     text-align: center;
 }
+
+.breadcrumb a {
+    cursor: pointer;
+}
 </style>
 </head>
 <body>
@@ -300,11 +305,11 @@ p, span {
 |  | | | |  _  | |     |  |  | | | |  _  | |  -- | |   | |  _  |
 |__|_|_| |_| |_| |_____/  |__|_|_| |_| |_| |_____| |___| |_| |_|</code></pre>
 <div style='padding: 1em; float: right; line-height: 2.4em; text-align: right'>
-第一预览版 <small>2015-01-15</small> <a href='http://zlo.gs/p/neuront/madmagia-publish'>使用手册</a>
+Alpha 测试版 <small>2015-01-25</small>
 <br>
-项目地址: <a href='https://github.com/neuront/madmagia'>github.com/neuront/madmagia</a>
+<a href='http://zlo.gs/p/neuront/madmagia-publish'>使用手册</a>
 <br>
-&copy; <a href='http://www.douban.com/people/neuront/'>神经元</a>／<a href='http://bitfoc.us/'>Bit Focus</a>
+<a href='javascript:mad.about.showAbout()'>关于</a>
 </div>
 <hr>
 </div>
@@ -352,7 +357,7 @@ p, span {
     </table>
     <div style='float: left; width: 400px; max-width: 400px'>
         <p style='text-align: center'><span class='edit-segment-frame-time'></span> 时间点上的画面</p>
-        <img style='display: block' id='edit-segment-frame-viewer'>
+        <img style='display: block; max-width: 400px; max-height: 225px;' id='edit-segment-frame-viewer'>
         <div class='mm-time-spanner'>
             <button class='btn mm-time-spanner-btn' data-span='-0.05'>&lt;</button>
             <span class='mm-time-spanner-label'>0.05s</span>
@@ -375,8 +380,6 @@ p, span {
         </div>
         <p style='clear: both; text-align: center'><span class='edit-segment-frame-time'></span> 时间点上的画面</p>
         <button class='btn input-block-level' id='edit-segment-use-as-start'>使用该时间作为片段开始</button>
-
-        <button class='btn btn-primary input-block-level' id='edit-segment-play' style='margin-top: 20px; display: none'>播放这个视频</button>
     </div>
 </div>
 
@@ -489,8 +492,7 @@ p, span {
 <div id='play-section-panel' style='display: none'>
     <p style='float: left; margin-left: 6px'>播放分节</p>
     <div style='float: right'><button id='section-play-quit' class='btn btn-danger'>X</button></div>
-    <div id='slicing-status' style='clear: both'></div>
-    <div style='text-align: center'>
+    <div style='text-align: center; margin-bottom: 4em'>
         所选中的分节的总长度 (估计值): <span id='play-section-sectotal'></span>
         <span style='display: none'>
         与分节内片段的总长度 <span id='play-section-segtotal'></span>
@@ -500,12 +502,15 @@ p, span {
             <button class='btn btn-danger'>继续, 就是这么任性</button>
         </div>
     </div>
-    <div id='play-section-ask-export'>
-        你选择的片段长度超过了 30 秒预览限制, 点击下面的按钮将导出为高清视频到指定的输出目录, 这样你可以与小伙伴们分享视频或上传至视频网站
-        <br>
-        <button class='btn' id='play-section-export'>只能点这里确定 否则右上红 X</button>
+    <div style='width: 600px; margin: auto; text-align: center'>
+        <button class='btn btn-primary input-block-level' style='height: 4em; margin-bottom: 2em' id='play-section-preview'>生成预览, 在浏览器中播放</button>
+        <span id='play-section-warn-export'>
+            你选择的片段长度超过了 30 秒预览限制, 只能导出为高清视频
+        </span>
+        <button class='btn input-block-level' style='height: 3em' id='play-section-export'>导出高清视频, 在视频播放器中播放</button>
     </div>
-    <div style='text-align: center'>
+    <div id='slicing-status' style='clear: both; font-size: 1.5em; text-align: center'></div>
+    <div style='text-align: center' id='play-section-player'>
         <video autoplay='autoplay'>你的浏览器 OUT 了, 居然还不支持直接播放视频, 赶紧换 Chrome 吧</video>
         <div>
             <button class='btn' id='play-section-replay'>重放</button>
@@ -513,4 +518,55 @@ p, span {
             <span id='play-section-pos'></span>
         </div>
     </div>
+</div>
+
+<div id='about-panel' style='display: none'>
+    <h1 style='float: left; margin-left: 6px'>关于</h1>
+    <div style='float: right'><button id='about-quit' class='btn btn-danger'>X</button></div>
+    <hr>
+    <p style='text-align: center; font-size: 1.8em; margin-top: 1em'>
+    Madmagia 致力于构建一个简易的混剪视频编辑器.
+    <br>
+    谢谢使用与反馈
+    </p>
+    <hr style='margin-top: 3em; margin-bottom: 3em'>
+
+    <table style='margin: auto; text-align: center; font-size: 1.5em'>
+        <caption>开发人员</caption>
+        <tbody>
+        <tr>
+            <td style='width: 300px; min-width: 300px; height: 4em'>
+                <a href='http://www.douban.com/people/neuront/' target='_blank'><img src='http://img3.douban.com/icon/u4183954-7.jpg'> 神经元</a>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td style='width: 300px; min-width: 300px; height: 4em'>
+                謎の placeholder
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <p style='text-align: center; font-size: 1.2em'>[ 项目地址: <a href='https://github.com/neuront/madmagia'>github.com/neuront/madmagia</a> ]</p>
+
+    <hr style='margin-top: 3em; margin-bottom: 3em'>
+    <table style='margin: auto; text-align: center; font-size: 1.2em'>
+        <caption>感谢热心小伙伴在早期版本测试中给予的帮助和反馈</caption>
+        <tbody>
+        <tr>
+            <td style='width: 180px; min-width: 180px; height: 4em'>
+                <a href='http://t.qq.com/qingxbl' target='_blank'>清香白莲</a>
+            </td>
+            <td style='width: 180px; min-width: 180px; height: 4em'>
+                <a href='http://www.douban.com/people/dianxincha/' target='_blank'>大笨兔</a>
+            </td>
+            <td style='width: 180px; min-width: 180px; height: 4em'>
+                <a href='http://weibo.com/weilv1988' target='_blank'>D_MELODY</a>
+            </td>
+            <td style='width: 180px; min-width: 180px; height: 4em'>
+                <a href='http://space.bilibili.com/264993' target='_blank'>HubertS</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
 </div>

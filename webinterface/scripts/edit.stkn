@@ -28,7 +28,7 @@ frameTime.time: 0
 frameTime.setTime: (time):
     @time: time if time >=0 else 0
     @text(mad.formatTime(@time))
-    displayFrame(@time)
+    displayFrame(@getVideoFile, @time)
 frameTime.incTime: (delta): @setTime(parseFloat(delta) + @time)
 
 segStartInput: jQuery('#edit-segment-start').blur(():
@@ -38,7 +38,7 @@ segStartInput: jQuery('#edit-segment-start').blur(():
     frameTime.setTime(start)
 )
 
-func editSegment(segment, sectionDuration, cb)
+func editSegment(segment, sectionDuration, getVideoFile, cb)
     editDiv: jQuery('#edit-segment-panel').detach()
     panel: mad.createOverlapPanel().append(editDiv.show())
 
@@ -72,6 +72,7 @@ func editSegment(segment, sectionDuration, cb)
         })
     )
 
+    frameTime.getVideoFile: getVideoFile
     if segment.epnum
         jQuery('#edit-segment-epnum-selector option[value="' + segment.epnum + '"]').attr('selected', 'selected')
         frameTime.setTime(segment.start)
@@ -86,21 +87,21 @@ func editSegment(segment, sectionDuration, cb)
     if !segment || segment.start != mad.parseTime(mad.formatTime(frameTime.time))
         jQuery('#edit-segment-use-as-start').addClass('btn-primary')
 
-func currentVideoFile()
-    epnum: parseFloat(jQuery('#edit-segment-epnum-selector :selected').val())
-    return [epnum, mad.workspace.findSourceByEpnum(epnum)]
-
-func displayFrame(time)
+func displayFrame(getVideoFile, time)
     img: jQuery('#edit-segment-frame-viewer')
     img.attr('src', '/frame/loading')
-    epnum_n_video: currentVideoFile()
+    epnum: parseFloat(jQuery('#edit-segment-epnum-selector :selected').val())
+    videoFile: getVideoFile(epnum)
     jQuery.post('/frame/gen', {
-        epnum: epnum_n_video[0],
+        epnum: epnum,
         time: time,
-        source_path: epnum_n_video[1],
+        source_path: videoFile,
         output_path: mad.workspace.getOutputPath(),
     }, %r)
-    img.attr('src', '/frame/?path=' + encodeURIComponent(r))
+    if r
+        img.attr('src', '/frame/?path=' + encodeURIComponent(r))
+    else
+        jQuery('#edit-seg-error-feedback').text(_t_('bad_video') + ': ' + videoFile)
 
 jQuery('#edit-segment-epnum-selector').change((): frameTime.incTime(0))
 jQuery('#edit-segment-panel .mm-time-spanner-btn').click(():
@@ -110,12 +111,9 @@ jQuery('#edit-segment-panel .mm-time-spanner-btn').click(():
     else
         jQuery('#edit-segment-use-as-start').removeClass('btn-primary')
 )
-jQuery('#edit-segment-use-as-start').click((): segStartInput.val(mad.formatTime(frameTime.time)))
-
-jQuery('#edit-segment-play').click(():
-    mad.player.video(currentVideoFile()[1], %r)
-    if r != null
-        frameTime.setTime(r)
+jQuery('#edit-segment-use-as-start').click(():
+    jQuery(@).removeClass('btn-primary')
+    segStartInput.val(mad.formatTime(frameTime.time))
 )
 
 secError: (input, err):
@@ -138,7 +136,6 @@ func editSection(section, prevSec, nextSec, audioPath, outputPath, cb)
     editDiv: jQuery('#edit-section-panel').detach()
     panel: mad.createOverlapPanel().append(editDiv.show())
 
-    console.log(audioPath, outputPath)
     func quit(sec)
         editDiv.detach()
         jQuery(document.body).append(editDiv.hide())
@@ -211,7 +208,7 @@ func editSection(section, prevSec, nextSec, audioPath, outputPath, cb)
         })
     )
 
-export mad.edit.createSegment: (sectionDuration, cb): editSegment({}, sectionDuration, cb)
+export mad.edit.createSegment: (sectionDuration, getVideoFile, cb): editSegment({}, sectionDuration, getVideoFile, cb)
 export mad.edit.editSegment: editSegment
 export mad.edit.createSection: (triggerSec, audioPath, outputPath, cb): editSection(
     null, triggerSec, triggerSec.nextSection(), audioPath, outputPath, cb)

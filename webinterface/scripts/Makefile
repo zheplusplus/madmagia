@@ -8,7 +8,7 @@ output_dir:
 	@mkdir -p $(OUTPUT_DIR)
 
 $(OUTPUT_DIR)/madmagia.js:gettext.js common.stkn projects.stkn workspace.stkn \
-                          prepare.stkn edit.stkn player.stkn
+                          prepare.stkn edit.stkn player.stkn about.stkn
 	cat gettext.js > $@
 	$(STEKIN) < common.stkn >> $@
 	$(STEKIN) < prepare.stkn >> $@
@@ -16,6 +16,7 @@ $(OUTPUT_DIR)/madmagia.js:gettext.js common.stkn projects.stkn workspace.stkn \
 	$(STEKIN) < workspace.stkn >> $@
 	$(STEKIN) < edit.stkn >> $@
 	$(STEKIN) < player.stkn >> $@
+	$(STEKIN) < about.stkn >> $@
 
 clean:
 	rm -f $(OUTPUT_DIR)/*

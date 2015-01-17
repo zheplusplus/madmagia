@@ -18,6 +18,12 @@ func getSequence(path, %%)
     jQuery.get('/seqc/get/', {path: path}, %r)
     return r
 
+func getVideoFile(videoList, epnum)
+    return (videoList |:
+        if $.epnum = epnum
+            $result.push($.path)
+    )[0]
+
 func newSegment(epnum, start, duration, filters, parent)
     epnumTag: jQuery('<span>').addClass('mm-seg-el')
     startTag: jQuery('<span>').addClass('mm-seg-el')
@@ -32,7 +38,10 @@ func newSegment(epnum, start, duration, filters, parent)
                          click(():
                              if !jQuery(parent).hasClass('in-edit')
                                 return
-                             mad.edit.editSegment(@, parent.duration(), %s)
+                             mad.edit.editSegment(
+                                 @, parent.duration(),
+                                 (epnum): getVideoFile(workspace.videoList, epnum),
+                                 %s)
                              if s
                                  set(s.epnum, s.start, s.duration, s.filters)
                          )[0]
@@ -64,13 +73,17 @@ func newSegment(epnum, start, duration, filters, parent)
         duration: div.duration,
         filters: div.filters,
     }
+    div.videoFile: getVideoFile(workspace.videoList, div.epnum)
     return div
 
 func newSection(name, start, sub)
     func addSegmentButton()
         btn: mad.createPriButton(_t_('new_segment')).addClass('ws-add-segment')
         btn.click(():
-            mad.edit.createSegment(sec.duration(), %s)
+            mad.edit.createSegment(
+                sec.duration(),
+                (epnum): getVideoFile(workspace.videoList, epnum),
+                %s)
             if s
                 sec.addSegment(newSegment(s.epnum, s.start, s.duration, s.filters, sec), btn)
         )
@@ -254,10 +267,6 @@ func saveCurrentProjct()
     }, %r)
 
 export mad.workspace.save: saveCurrentProjct
-export mad.workspace.findSourceByEpnum: (epnum): (workspace.videoList |:
-    if $.epnum = epnum
-        $result.push($.path)
-)[0]
 export mad.workspace.getOutputPath: (): proj.getOutputPath()
 export mad.workspace.getAudioPath: (): proj.getAudioPath()
 export mad.workspace.getVideoPath: (): proj.getVideoPath()
