@@ -265,10 +265,21 @@ p, span {
       <tr>
         <td id='ws-segs' style='width: 600px; vertical-align: top'></td>
         <td id='ws-action' style='max-width: 200px; width: 200px; vertical-align: top'>
-          <button id='save-workspace' onclick='mad.workspace.save()' class='btn btn-primary input-block-level' style='margin-bottom: 40px; height: 64px; font-size: 1.6em'>保存当前项目</button>
+          <button id='save-workspace' onclick='mad.workspace.save()' class='btn btn-primary input-block-level' style='height: 64px; font-size: 1.6em'>保存当前项目</button>
           <div>
-              在预览/新建分节之后会自动保存
+            在预览/新建分节之后会自动保存
           </div>
+
+          <hr>
+
+          <div>
+            <label class='input-block-level'>
+              <input checked='checked' type='checkbox' id='play-section-auto-preview-cb'>
+              <span>当预览少于 30 秒的分节时自动在页面上播放</span>
+            </label>
+          </div>
+
+          <hr>
 
           <button class='btn input-block-level collapse-trigger'>
             音频信息
@@ -502,6 +513,7 @@ Alpha 测试版 <small>2015-01-25</small>
             <button class='btn btn-danger'>继续, 就是这么任性</button>
         </div>
     </div>
+    <div id='slicing-status' style='clear: both; font-size: 1.5em; text-align: center'></div>
     <div style='width: 600px; margin: auto; text-align: center'>
         <button class='btn btn-primary input-block-level' style='height: 4em; margin-bottom: 2em' id='play-section-preview'>生成预览, 在浏览器中播放</button>
         <span id='play-section-warn-export'>
@@ -509,7 +521,6 @@ Alpha 测试版 <small>2015-01-25</small>
         </span>
         <button class='btn input-block-level' style='height: 3em' id='play-section-export'>导出高清视频, 在视频播放器中播放</button>
     </div>
-    <div id='slicing-status' style='clear: both; font-size: 1.5em; text-align: center'></div>
     <div style='text-align: center' id='play-section-player'>
         <video autoplay='autoplay'>你的浏览器 OUT 了, 居然还不支持直接播放视频, 赶紧换 Chrome 吧</video>
         <div>

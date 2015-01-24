@@ -79,15 +79,9 @@ func section(sections, cb)
 
     jQuery('#play-section-player').hide()
     jQuery('#play-section-preview').parent().show()
-    if segTotal > 30
-        jQuery('#play-section-preview').hide()
-        jQuery('#play-section-warn-export').show()
-    else
-        jQuery('#play-section-preview').show()
-        jQuery('#play-section-warn-export').hide()
 
-    jQuery('#play-section-preview').unbind('click').click(():
-        jQuery(@).parent().hide()
+    func startPreview()
+        jQuery('#play-section-preview').parent().hide()
         seg_files: segments |:
             sliceSegmentAndPush($, $i, $result, '/video/slice', %%)
         if statusLabel.error || !panel.active
@@ -124,24 +118,36 @@ func section(sections, cb)
                     mad.formatTime(secplayer.currentTime) +
                     ' / ' + mad.formatTime(secplayer.currentTime + audioStart))
         )
-    )
 
-    jQuery('#play-section-export').unbind('click').click(():
-        jQuery(@).parent().hide()
-        seg_files: segments |:
-            sliceSegmentAndPush($, $i, $result, '/video/slice_export', %%)
-        if statusLabel.error || !panel.active
-            return
-        statusLabel.text(_t_('merging_segments'))
-        jQuery.post('/video/merge_export', {
-            start: audioStart,
-            end: audioEnd,
-            segments: JSON.stringify(seg_files),
-            audio: mad.workspace.getAudioPath(),
-            output_dir: mad.workspace.getOutputPath(),
-        }, %r)
-        statusLabel.text(_t_('segments_exported') + ': ' + r)
-    )
+    func bindExport()
+        jQuery('#play-section-export').unbind('click').click(():
+            jQuery(@).parent().hide()
+            seg_files: segments |:
+                sliceSegmentAndPush($, $i, $result, '/video/slice_export', %%)
+            if statusLabel.error || !panel.active
+                return
+            statusLabel.text(_t_('merging_segments'))
+            jQuery.post('/video/merge_export', {
+                start: audioStart,
+                end: audioEnd,
+                segments: JSON.stringify(seg_files),
+                audio: mad.workspace.getAudioPath(),
+                output_dir: mad.workspace.getOutputPath(),
+            }, %r)
+            statusLabel.text(_t_('segments_exported') + ': ' + r)
+        )
+
+    if segTotal > 30
+        jQuery('#play-section-preview').hide()
+        jQuery('#play-section-warn-export').show()
+        return bindExport()
+    if jQuery('#play-section-auto-preview-cb').prop('checked')
+        return startPreview()
+
+    bindExport()
+    jQuery('#play-section-preview').show()
+    jQuery('#play-section-warn-export').hide()
+    jQuery('#play-section-preview').unbind('click').click(startPreview)
 
 export mad.player.video: video
 export mad.player.audio: audio
