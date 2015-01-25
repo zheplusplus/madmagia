@@ -73,7 +73,7 @@ func editSegment(segment, sectionDuration, getVideoFile, cb)
     )
 
     frameTime.getVideoFile: getVideoFile
-    if segment.epnum
+    if segment
         jQuery('#edit-segment-epnum-selector option[value="' + segment.epnum + '"]').attr('selected', 'selected')
         frameTime.setTime(segment.start)
         segStartInput.val(mad.formatTime(segment.start))
@@ -208,7 +208,7 @@ func editSection(section, prevSec, nextSec, audioPath, outputPath, cb)
         })
     )
 
-export mad.edit.createSegment: (sectionDuration, getVideoFile, cb): editSegment({}, sectionDuration, getVideoFile, cb)
+export mad.edit.createSegment: (sectionDuration, getVideoFile, cb): editSegment(null, sectionDuration, getVideoFile, cb)
 export mad.edit.editSegment: editSegment
 export mad.edit.createSection: (triggerSec, audioPath, outputPath, cb): editSection(
     null, triggerSec, triggerSec.nextSection(), audioPath, outputPath, cb)
