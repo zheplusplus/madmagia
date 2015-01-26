@@ -51,10 +51,11 @@ func section(sections, cb)
         cb()
     jQuery('#section-play-quit').unbind('click').click((): quit())
 
-    statusLabel: jQuery('#slicing-status')
+    statusLabel: jQuery('#slicing-status').text('')
+    statusLabel.error: false
 
     func sliceSegmentAndPush(segment, index, result, uri, %%)
-        if !panel.active
+        if statusLabel.error || !panel.active
             return
         statusLabel.text(_t_('slicing_segment') + ' #' + index)
         jQuery.post(uri, {
@@ -62,28 +63,10 @@ func section(sections, cb)
             video_dir: mad.workspace.getVideoPath(),
             output_dir: mad.workspace.getOutputPath(),
         }, %r)
+        if !r
+            statusLabel.error: true
+            return statusLabel.text(_t_('bad_video') + ': ' + segment.videoFile)
         result.push(r)
-
-    func askExportSegments(segments, audioStart, audioEnd, %%)
-        statusLabel.text('')
-        jQuery('#play-section-ask-export').show().next().hide()
-        jQuery('#play-section-export').unbind('click').removeAttr('disabled').click(%)
-        jQuery('#play-section-export').attr('disabled', 'disabled')
-        seg_files: segments |:
-            sliceSegmentAndPush($, $i, $result, '/video/slice_export', %%)
-        if !panel.active
-            return
-        statusLabel.text(_t_('merging_segments'))
-        jQuery.post('/video/merge_export', {
-            start: audioStart,
-            end: audioEnd,
-            segments: JSON.stringify(seg_files),
-            audio: mad.workspace.getAudioPath(),
-            output_dir: mad.workspace.getOutputPath(),
-        }, %r)
-        if !panel.active
-            return
-        statusLabel.text(_t_('segments_exported') + ': ' + r)
 
     audioStart: sections[0].start
     audioEnd: sections[sections.length - 1].end()
@@ -94,44 +77,77 @@ func section(sections, cb)
     segTotal: (segments |: $.duration).reduce((x, y): x + y, 0)
     jQuery('#play-section-segtotal').text(mad.formatTime(segTotal))
 
+    jQuery('#play-section-player').hide()
+    jQuery('#play-section-preview').parent().show()
+
+    func startPreview()
+        jQuery('#play-section-preview').parent().hide()
+        seg_files: segments |:
+            sliceSegmentAndPush($, $i, $result, '/video/slice', %%)
+        if statusLabel.error || !panel.active
+            return
+        statusLabel.text(_t_('merging_segments'))
+        jQuery.post('/video/merge', {
+            start: audioStart,
+            end: audioEnd,
+            segments: JSON.stringify(seg_files),
+            audio: mad.workspace.getAudioPath(),
+            output_dir: mad.workspace.getOutputPath(),
+        }, %r)
+        if statusLabel.error || !panel.active
+            return
+
+        jQuery('#play-section-player').show()
+        secplayer.src: '/video/?path=' + encodeURIComponent(r)
+
+        jQuery('#play-section-replay').unbind('click').click(():
+            src: secplayer.src
+            if !src
+                return
+            secplayer.src: ''
+            secplayer.src: src
+        )
+        jQuery('#play-section-pause').unbind('click').click(():
+            if !secplayer.src
+                return
+            if secplayer.paused
+                secplayer.play()
+            else
+                secplayer.pause()
+                jQuery('#play-section-pos').text(
+                    mad.formatTime(secplayer.currentTime) +
+                    ' / ' + mad.formatTime(secplayer.currentTime + audioStart))
+        )
+
+    func bindExport()
+        jQuery('#play-section-export').unbind('click').click(():
+            jQuery(@).parent().hide()
+            seg_files: segments |:
+                sliceSegmentAndPush($, $i, $result, '/video/slice_export', %%)
+            if statusLabel.error || !panel.active
+                return
+            statusLabel.text(_t_('merging_segments'))
+            jQuery.post('/video/merge_export', {
+                start: audioStart,
+                end: audioEnd,
+                segments: JSON.stringify(seg_files),
+                audio: mad.workspace.getAudioPath(),
+                output_dir: mad.workspace.getOutputPath(),
+            }, %r)
+            statusLabel.text(_t_('segments_exported') + ': ' + r)
+        )
+
     if segTotal > 30
-        return askExportSegments(segments, audioStart, audioEnd, (e, r): cb(r))
-    jQuery('#play-section-ask-export').hide().next().show()
+        jQuery('#play-section-preview').hide()
+        jQuery('#play-section-warn-export').show()
+        return bindExport()
+    if jQuery('#play-section-auto-preview-cb').prop('checked')
+        return startPreview()
 
-    seg_files: segments |:
-        sliceSegmentAndPush($, $i, $result, '/video/slice', %%)
-    statusLabel.text(_t_('merging_segments'))
-    if !panel.active
-        return
-    jQuery.post('/video/merge', {
-        start: audioStart,
-        end: audioEnd,
-        segments: JSON.stringify(seg_files),
-        audio: mad.workspace.getAudioPath(),
-        output_dir: mad.workspace.getOutputPath(),
-    }, %r)
-    if !panel.active
-        return
-    secplayer.src: '/video/?path=' + encodeURIComponent(r)
-
-    jQuery('#play-section-replay').unbind('click').click(():
-        src: secplayer.src
-        if !src
-            return
-        secplayer.src: ''
-        secplayer.src: src
-    )
-    jQuery('#play-section-pause').unbind('click').click(():
-        if !secplayer.src
-            return
-        if secplayer.paused
-            secplayer.play()
-        else
-            secplayer.pause()
-            jQuery('#play-section-pos').text(
-                mad.formatTime(secplayer.currentTime) +
-                ' / ' + mad.formatTime(secplayer.currentTime + audioStart))
-    )
+    bindExport()
+    jQuery('#play-section-preview').show()
+    jQuery('#play-section-warn-export').hide()
+    jQuery('#play-section-preview').unbind('click').click(startPreview)
 
 export mad.player.video: video
 export mad.player.audio: audio

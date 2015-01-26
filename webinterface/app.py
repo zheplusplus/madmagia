@@ -1,13 +1,13 @@
 import os
 import sys
 import types
-from cStringIO import StringIO
 import functools
-from cgi import parse_qs
 import json
 import flask
 import werkzeug.exceptions
 import tempfile
+from cgi import parse_qs
+from cStringIO import StringIO
 
 from madmagia.config import config
 from madmagia.pathutil import PATH_ENCODING
@@ -18,7 +18,7 @@ def sure_mkdir(path):
         os.mkdir(path)
 
 base_dir = os.path.dirname(__file__)
-static_dir = os.path.join(base_dir, 'static')
+static_dir = unicode(os.path.join(base_dir, 'static'), PATH_ENCODING)
 temp_dir = os.path.join(tempfile.gettempdir(), 'madmagia')
 sure_mkdir(temp_dir)
 app = flask.Flask('MadMagia', static_folder=static_dir)

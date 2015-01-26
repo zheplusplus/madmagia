@@ -97,7 +97,7 @@ def save_frame_to(time, source_file, output_file, resolution=None):
     args.append(output_file)
     p = shell.execute(*args)
     if p.returncode != 0 and 'filename number 2 from pattern' not in p.stderr:
-        raise ValueError(p.stderr)
+        raise shell.ShellError(args, p.stderr)
     logger.debug('Generated image %s', output_file)
     return output_file
 
@@ -113,7 +113,7 @@ def _cut_segment(i, seg, source_files, output_dir):
         raise ValueError('Process fail at ' + str(i) + ': no such epnum ' +
                          seg.epnum)
     source_file = source_files[seg.epnum]
-    p = shell.execute(
+    args = [
         config['avconv'],
         '-ss', str(seg.start),
         '-i', source_file,
@@ -122,9 +122,11 @@ def _cut_segment(i, seg, source_files, output_dir):
         '-vcodec', config['vcodec'],
         '-b:v', config['bitrate'],
         '-r', config['fps'],
-        '-an', tmp_file)
+        '-an', tmp_file,
+    ]
+    p = shell.execute(*args)
     if p.returncode != 0:
-        raise ValueError('process fail at %d : %s' % (i, p.stderr))
+        raise shell.ShellError(args, 'process fail at %d : %s' % (i, p.stderr))
     logger.info('Generated segment: %d - %s', i, tmp_file)
     return tmp_file
 

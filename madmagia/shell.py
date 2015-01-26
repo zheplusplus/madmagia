@@ -5,6 +5,12 @@ import subprocess
 from pathutil import PATH_ENCODING
 
 
+class ShellError(StandardError):
+    def __init__(self, args, message):
+        StandardError.__init__(self, message)
+        self.args = args
+
+
 class Process(object):
     def __init__(self, args, sync):
         self.args = [a.encode(PATH_ENCODING) if isinstance(a, unicode) else a
@@ -21,10 +27,10 @@ class Process(object):
             if self.sync:
                 self.stdout, self.stderr = p.communicate()
                 self.returncode = p.returncode
-        except OSError:
+        except OSError, e:
             print >> sys.stderr, 'Error on executing:'
             print >> sys.stderr, ' '.join(self.args)
-            raise
+            raise ShellError(self.args, e.message)
 
 
 def execute(*args):

@@ -10,6 +10,7 @@ import madmagia.video_slice
 import madmagia.avmerge
 import madmagia.sequence
 import madmagia.files
+import madmagia.shell
 from madmagia.config import logger, config
 import app
 
@@ -37,8 +38,7 @@ def video_map(r):
     path = r.args['path']
     try:
         return [{'epnum': k, 'path': v} for k, v in
-                madmagia.files.input_videos(
-                    path, ['mkv', 'mov', 'mp4']).iteritems()]
+                madmagia.files.input_videos(path, ['mkv']).iteritems()]
     except StandardError, e:
         logger.exception(e)
         return []
@@ -68,11 +68,13 @@ def video_slice(r):
     config['bitrate'] = '1.6M'
     config['resolution'] = '800:450'
     segment = madmagia.sequence.Segment(**json.loads(r.form['segment']))
-    input_files = madmagia.files.input_videos(
-        r.form['video_dir'], ['mkv', 'mov', 'mp4'])
+    input_files = madmagia.files.input_videos(r.form['video_dir'], ['mkv'])
     output_dir = _temp_dir(r.form['output_dir'])
-    return madmagia.video_slice.slice_segment(0, segment, input_files,
-                                              output_dir)
+    try:
+        return madmagia.video_slice.slice_segment(0, segment, input_files,
+                                                  output_dir)
+    except madmagia.shell.ShellError:
+        return ''
 
 
 @app.post_async('/video/merge')
@@ -95,8 +97,7 @@ def video_slice_export(r):
     config['bitrate'] = '16M'
     config['resolution'] = '1280:720'
     segment = madmagia.sequence.Segment(**json.loads(r.form['segment']))
-    input_files = madmagia.files.input_videos(
-        r.form['video_dir'], ['mkv', 'mov', 'mp4'])
+    input_files = madmagia.files.input_videos(r.form['video_dir'], ['mkv'])
     output_dir = _temp_dir(r.form['output_dir']) + '.export'
     app.sure_mkdir(output_dir)
     return madmagia.video_slice.slice_segment(0, segment, input_files,
@@ -122,11 +123,14 @@ def video_merge_export(r):
 def gen_frame(r):
     epnum = r.form['epnum']
     time = float(r.form['time'])
-    return madmagia.video_slice.save_frame_to(
-        time, app.path(r.form['source_path']),
-        os.path.join(_temp_dir(r.form['output_path']),
-                     '%s_%f.png' % (epnum, time)),
-        (480, 270))
+    try:
+        return madmagia.video_slice.save_frame_to(
+            time, app.path(r.form['source_path']),
+            os.path.join(_temp_dir(r.form['output_path']),
+                         '%s_%f.png' % (epnum, time)),
+            (480, 270))
+    except madmagia.shell.ShellError:
+        return ''
 
 
 @app.app.route('/frame/', methods=['GET'])
