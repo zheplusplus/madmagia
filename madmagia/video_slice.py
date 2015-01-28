@@ -1,7 +1,6 @@
-import os
-import re
+import os.path
+import logging
 
-from config import config, logger
 import pathutil
 import shell
 
@@ -16,10 +15,8 @@ def _vfilter(f):
 
 
 @_vfilter
-def _repeatframe(i, seg, inp, args):
-    image = save_frame_to(0, inp, inp + '_rf.png')
-    if image is None:
-        raise ValueError('process fail at %d : %s' % (i, p.stderr))
+def _repeatframe(config, i, seg, inp, args):
+    image = save_frame_to(config, 0, inp, inp + '_rf.png')
     tmp_file = inp + '_repeat_frame.mp4'
     if os.path.exists(tmp_file):
         return tmp_file
@@ -39,7 +36,7 @@ def _repeatframe(i, seg, inp, args):
 
 
 @_vfilter
-def _hflip(i, seg, inp, args):
+def _hflip(config, i, seg, inp, args):
     tmp_file = inp + '_hflip.mp4'
     if os.path.exists(tmp_file):
         return tmp_file
@@ -57,7 +54,7 @@ def _hflip(i, seg, inp, args):
 
 
 @_vfilter
-def _fillspan(i, seg, inp, span_dur):
+def _fillspan(config, i, seg, inp, span_dur):
     pts_rate = span_dur / float(seg.duration)
     tmp_file = inp + '_fillspan' + str(span_dur) + '.mp4'
     if os.path.exists(tmp_file):
@@ -75,15 +72,15 @@ def _fillspan(i, seg, inp, span_dur):
     return tmp_file
 
 
-def save_frame(time, epnum):
+def save_frame(config, time, epnum):
     return save_frame_to(
-        time, config['input_videos'][epnum],
+        config, time, config['input_videos'][epnum],
         os.path.join(FRAME_OUTPUT_DIR, '%s_%f.png' % (epnum, time)))
 
 
-def save_frame_to(time, source_file, output_file, resolution=None):
+def save_frame_to(config, time, source_file, output_file):
     if os.path.exists(output_file):
-        logger.debug('Cached image %s', output_file)
+        logging.debug('Cached image %s', output_file)
         return output_file
     args = [
         config['avconv'],
@@ -92,27 +89,27 @@ def save_frame_to(time, source_file, output_file, resolution=None):
         '-vsync', '1',
         '-t', '0.01',
     ]
-    if resolution is not None:
-        args.extend(['-s', '%dx%d' % (resolution[0], resolution[1])])
+    if config['resolution']:
+        args.extend(['-s', config['resolution'].replace(':', 'x')])
     args.append(output_file)
     p = shell.execute(*args)
     if p.returncode != 0 and 'filename number 2 from pattern' not in p.stderr:
         raise shell.ShellError(args, p.stderr)
-    logger.debug('Generated image %s', output_file)
+    logging.debug('Generated image %s', output_file)
     return output_file
 
 
-def _cut_segment(i, seg, source_files, output_dir):
+def _cut_segment(config, i, seg, output_dir):
     tmp_file = os.path.join(output_dir, 'segment_%s_%f_%f.mp4' % (
         seg.epnum, seg.start, seg.duration))
     if os.path.exists(tmp_file):
-        logger.info('Cached segment: %d - %s', i, tmp_file)
+        logging.info('Cached segment: %d - %s', i, tmp_file)
         return tmp_file
 
-    if seg.epnum not in source_files:
+    if seg.epnum not in config['input_videos']:
         raise ValueError('Process fail at ' + str(i) + ': no such epnum ' +
                          seg.epnum)
-    source_file = source_files[seg.epnum]
+    source_file = config['input_videos'][seg.epnum]
     args = [
         config['avconv'],
         '-ss', str(seg.start),
@@ -127,57 +124,39 @@ def _cut_segment(i, seg, source_files, output_dir):
     p = shell.execute(*args)
     if p.returncode != 0:
         raise shell.ShellError(args, 'process fail at %d : %s' % (i, p.stderr))
-    logger.info('Generated segment: %d - %s', i, tmp_file)
+    logging.info('Generated segment: %d - %s', i, tmp_file)
     return tmp_file
 
 
-def slice_segment(i, seg, source_files, output_dir):
-    return _apply_filters(_cut_segment(i, seg, source_files, output_dir),
-                          i, seg)
+def slice_segment(config, i, seg, output_dir):
+    return _apply_filters(
+        config, _cut_segment(config, i, seg, output_dir), i, seg)
 
 
-def _apply_filters(tmp_file, i, seg):
+def _apply_filters(config, tmp_file, i, seg):
     for vfilter_args in seg.filters:
         vfilter = vfilter_args[0].lower()
         args = vfilter_args[1]
         if vfilter not in _vfilters:
             raise ValueError('No such filter: ' + vfilter)
-        tmp_file = _vfilters[vfilter](i, seg, tmp_file, args)
-
-    if seg.subt is None:
-        return tmp_file
-    output_file = tmp_file + '_sub_' + seg.subt + '.mp4'
-    if os.path.exists(output_file):
-        return output_file
-    p = shell.execute(
-        config['avconv'],
-        '-i', tmp_file,
-        '-vf', '''drawtext=fontfile='/usr/share/fonts/truetype/''' +
-               """ttf-dejavu/DejaVuSans.ttf':text='""" + seg.subt +
-               """':x=0:y=0:fontsize=36:fontcolor=black""",
-        '-vcodec', config['vcodec'],
-        '-b:v', config['bitrate'],
-        '-r', config['fps'],
-        output_file)
-    if p.returncode != 0:
-        raise ValueError('process fail at %d : %s' % (i, p.stderr))
-    return output_file
+        tmp_file = _vfilters[vfilter](config, i, seg, tmp_file, args)
+    return tmp_file
 
 
-def slice_segments(source_files, segments, output_dir=VIDEO_OUTPUT_DIR):
+def slice_segments(config, segments, output_dir=VIDEO_OUTPUT_DIR):
     tmp_files = []
     for i, seg in enumerate(segments):
-        tmp_files.append(slice_segment(i, seg, source_files, output_dir))
+        tmp_files.append(slice_segment(config, i, seg, output_dir))
         if (i + 1) % 20 == 0:
-            logger.info('Produced segment %d / %d', i + 1, len(segments))
+            logging.info('Produced segments %d / %d', i + 1, len(segments))
     return tmp_files
 
 
-def merge_segments(files, output_dir=VIDEO_OUTPUT_DIR):
+def merge_segments(config, files, output_dir=VIDEO_OUTPUT_DIR):
     merged_video = os.path.join(output_dir, 'merged.mp4')
     if len(files) == 0:
         raise ValueError('no segments')
-    logger.info('Merging segments to %s', merged_video)
+    logging.info('Merging segments to %s', merged_video)
     pathutil.rm(merged_video)
     p = shell.execute(
         config['mencoder'],

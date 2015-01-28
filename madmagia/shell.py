@@ -1,14 +1,13 @@
-import os
-import sys
 import subprocess
+import logging
 
 from pathutil import PATH_ENCODING
 
 
 class ShellError(StandardError):
     def __init__(self, args, message):
-        StandardError.__init__(self, message)
-        self.args = args
+        StandardError.__init__(self, '%s\nShell: %s' % (message, args))
+        self.shell_args = args
 
 
 class Process(object):
@@ -28,8 +27,7 @@ class Process(object):
                 self.stdout, self.stderr = p.communicate()
                 self.returncode = p.returncode
         except OSError, e:
-            print >> sys.stderr, 'Error on executing:'
-            print >> sys.stderr, ' '.join(self.args)
+            logging.error('OSError on executing: %s', self.args)
             raise ShellError(self.args, e.message)
 
 

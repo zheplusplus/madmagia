@@ -1,8 +1,8 @@
 import os
 import json
+import logging
 
 import madmagia.sequence
-from madmagia.config import logger
 import app
 
 
@@ -33,24 +33,24 @@ def touch_sequence_file(r):
         with open(path, 'a+'):
             return 'ok'
     except StandardError, e:
-        logger.exception(e)
+        logging.exception(e)
         return 'fail'
 
 
 @app.get_async('/seqc/get/')
 def get_sections(r):
     path = os.path.join(r.args['path'], 'sequence.txt')
-    logger.info('Load from %s', path)
+    logging.info('Load from %s', path)
     try:
         with open(path, 'r') as f:
             sections = madmagia.sequence.parse(
                 [unicode(ln, 'utf-8') for ln in f.readlines()], False)[0]
         return [_dump_section(s) for s in sections]
     except madmagia.sequence.ParseError, e:
-        logger.exception(e)
-        logger.error('Error at line %d', e.linenum)
+        logging.exception(e)
+        logging.error('Error at line %d', e.linenum)
     except StandardError, e:
-        logger.exception(e)
+        logging.exception(e)
     return [_dump_section(madmagia.sequence.Section(0, ':begin'))]
 
 
@@ -72,6 +72,7 @@ def _write_section(f, sec):
 @app.post_async('/seqc/save')
 def save_sequences(r):
     path = os.path.join(r.form['path'], 'sequence.txt')
-    logger.info('Save to %s', path)
+    logging.info('Save to %s', path)
     with open(path, 'w') as f:
-        [_write_section(f, s) for s in json.loads(r.form['sections'])]
+        for s in json.loads(r.form['sections']):
+            _write_section(f, s)

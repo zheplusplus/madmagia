@@ -1,3 +1,4 @@
+from madmagia import config
 from webinterface import app, handlers, fs, av, seqc
 
 
@@ -22,6 +23,7 @@ def main():
     print r'  |     |_  |   -   | |       | |       | |     --  |       | |       | |   D   | '
     print r'  |       | |   _   | |       | |  |    | |       | |   _   | |     --| |       | '
     print r'  |_______| |__| |__| |_______| |__|\___| \_______| |__| |__| |_______| |_______/ '
+    config.init_logger('info')
     app.app.run(host='127.0.0.1', port=5000)
 
 if __name__ == '__main__':

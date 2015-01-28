@@ -1,39 +1,11 @@
 import sys
+import shutil
 import os.path
 
 import pathutil
 
-DEFAULT_CONFIG = '''[input]
-video_dir=
-video_postfix=mov,mkv,mp4,avi,rm,rmvb
-bgm=
-sequence=./sequence.txt
-[exec]
-avconv=avconv
-mencoder=mencoder
-display=display
-[output]
-resolution=1280:720
-bitrate=1.6M
-fps=30
-vcodec=mpeg4
-[logging]
-level=info
-'''
-
-DEFAULT_SEQUENCE = '''# Sequence example file
-# Lines started with # will be ignored
-
-# Section example
-
-#         TIME    NAME      SUBTITLES (optional)
-#:section 01:00.0 section_a any text would be ok
-
-# Segment example
-
-# EPISODE TIME    DURATION
-#      01 00:02.0 4.0
-'''
+CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'asset', 'config.ini')
+SEQ_FILE = os.path.join(os.path.dirname(__file__), 'asset', 'sequence.txt')
 
 
 def main():
@@ -57,10 +29,8 @@ def main():
         print >> sys.stderr, 'please remove ./output/ directory and try again'
         return sys.exit(1)
 
-    with open('config.ini', 'w') as f:
-        f.write(DEFAULT_CONFIG)
-    with open('sequence.txt', 'w') as f:
-        f.write(DEFAULT_SEQUENCE)
+    shutil.copyfile(CONFIG_FILE, 'config.ini')
+    shutil.copyfile(SEQ_FILE, 'sequence.txt')
 
 
 def clean():

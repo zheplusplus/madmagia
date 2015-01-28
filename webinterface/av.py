@@ -1,9 +1,9 @@
 import os
 import flask
-import tempfile
 import urllib
 import json
-import time
+import logging
+from datetime import datetime
 
 import madmagia.audio_slice
 import madmagia.video_slice
@@ -11,7 +11,6 @@ import madmagia.avmerge
 import madmagia.sequence
 import madmagia.files
 import madmagia.shell
-from madmagia.config import logger, config
 import app
 
 
@@ -29,7 +28,7 @@ def media_len(r):
     try:
         return madmagia.audio_slice.audio_len(app.path(r.args['path']))
     except StandardError, e:
-        logger.exception(e)
+        logging.exception(e)
         return -1
 
 
@@ -40,7 +39,7 @@ def video_map(r):
         return [{'epnum': k, 'path': v} for k, v in
                 madmagia.files.input_videos(path, ['mkv']).iteritems()]
     except StandardError, e:
-        logger.exception(e)
+        logging.exception(e)
         return []
 
 
@@ -51,10 +50,10 @@ def audio_slice(r):
     duration = float(r.form['duration'])
     output_dir = _temp_dir(r.form['output_dir'])
     try:
-        return madmagia.audio_slice.slice(path, start, start + duration,
-                                          output_dir)
+        return madmagia.audio_slice.slice(
+            path, start, start + duration, output_dir)
     except StandardError, e:
-        logger.exception(e)
+        logging.exception(e)
         return []
 
 
@@ -65,14 +64,12 @@ def listen_audio():
 
 @app.post_async('/video/slice')
 def video_slice(r):
-    config['bitrate'] = '1.6M'
-    config['resolution'] = '800:450'
     segment = madmagia.sequence.Segment(**json.loads(r.form['segment']))
-    input_files = madmagia.files.input_videos(r.form['video_dir'], ['mkv'])
     output_dir = _temp_dir(r.form['output_dir'])
     try:
-        return madmagia.video_slice.slice_segment(0, segment, input_files,
-                                                  output_dir)
+        return madmagia.video_slice.slice_segment(
+            app.make_config(r.form['video_dir'], '', '800:450', '1.6M'),
+            0, segment, output_dir)
     except madmagia.shell.ShellError:
         return ''
 
@@ -84,24 +81,23 @@ def video_merge(r):
     audio_file = r.form['audio']
     output_dir = _temp_dir(r.form['output_dir'])
     merged_video = madmagia.video_slice.merge_segments(
+        {'mencoder': app.mencoder_path},
         json.loads(r.form['segments']), output_dir)
     audio_seg = madmagia.audio_slice.slice(
         audio_file, time_start, time_end, output_dir)
     return madmagia.avmerge.avmerge(
-        audio_seg, merged_video, os.path.join(
-            output_dir, 'output-%d.mp4' % time.time()), 'libx264')
+        {'avconv': app.avconv_path}, audio_seg, merged_video,
+        os.path.join(output_dir, 'output-%s.mp4' % datetime.now()), 'libx264')
 
 
 @app.post_async('/video/slice_export')
 def video_slice_export(r):
-    config['bitrate'] = '16M'
-    config['resolution'] = '1280:720'
     segment = madmagia.sequence.Segment(**json.loads(r.form['segment']))
-    input_files = madmagia.files.input_videos(r.form['video_dir'], ['mkv'])
     output_dir = _temp_dir(r.form['output_dir']) + '.export'
     app.sure_mkdir(output_dir)
-    return madmagia.video_slice.slice_segment(0, segment, input_files,
-                                              output_dir)
+    return madmagia.video_slice.slice_segment(
+        app.make_config(r.form['video_dir'], '', '1280:720', '16M'),
+        0, segment, output_dir)
 
 
 @app.post_async('/video/merge_export')
@@ -111,12 +107,13 @@ def video_merge_export(r):
     audio_file = r.form['audio']
     output_dir = r.form['output_dir']
     merged_video = madmagia.video_slice.merge_segments(
+        {'mencoder': app.mencoder_path},
         json.loads(r.form['segments']), output_dir)
     audio_seg = madmagia.audio_slice.slice(
         audio_file, time_start, time_end, output_dir)
     return madmagia.avmerge.avmerge(
-        audio_seg, merged_video, os.path.join(
-            output_dir, 'output-%d.mp4' % time.time()))
+        {'avconv': app.avconv_path}, audio_seg, merged_video,
+        os.path.join(output_dir, 'output-%s.mp4' % datetime.now()))
 
 
 @app.post_async('/frame/gen')
@@ -125,10 +122,10 @@ def gen_frame(r):
     time = float(r.form['time'])
     try:
         return madmagia.video_slice.save_frame_to(
-            time, app.path(r.form['source_path']),
+            {'avconv': app.avconv_path, 'resolution': '480:270'}, time,
+            app.path(r.form['source_path']),
             os.path.join(_temp_dir(r.form['output_path']),
-                         '%s_%f.png' % (epnum, time)),
-            (480, 270))
+                         '%s_%f.png' % (epnum, time)))
     except madmagia.shell.ShellError:
         return ''
 
