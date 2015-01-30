@@ -1,15 +1,13 @@
 import os
 import sys
-import types
 import functools
 import json
 import flask
-import werkzeug.exceptions
 import tempfile
 from cgi import parse_qs
 from cStringIO import StringIO
 
-from madmagia.config import config
+from madmagia import config
 from madmagia.pathutil import PATH_ENCODING
 
 
@@ -26,8 +24,14 @@ app.debug = len(sys.argv) == 1
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 bin_dir = os.path.join(base_dir, 'bin')
-config['avconv'] = os.path.join(bin_dir, 'ffmpeg', 'bin', 'avconv')
-config['mencoder'] = os.path.join(bin_dir, 'MPlayer', 'mencoder')
+avconv_path = os.path.join(bin_dir, 'ffmpeg', 'bin', 'avconv')
+mencoder_path = os.path.join(bin_dir, 'MPlayer', 'mencoder')
+
+
+def make_config(video_dir, bgm, resolution, bitrate):
+    return config.make_config(
+        video_dir, ['mkv'], bgm, '', avconv_path, mencoder_path, '',
+        resolution, bitrate, 30, 'mpeg4')
 
 
 def path(p):
@@ -103,11 +107,8 @@ class Request(object):
 
     @lazyprop
     def form(self):
-        try:
-            return {k: unicode(strip_irregular_space(v[0]), 'utf-8')
-                    for k, v in parse_qs(self.post_body).iteritems()}
-        except (ValueError, TypeError, AttributeError, LookupError):
-            return dict()
+        return {k: unicode(strip_irregular_space(v[0]), 'utf-8')
+                for k, v in parse_qs(self.post_body).iteritems()}
 
 
 def route_async(uri, method):

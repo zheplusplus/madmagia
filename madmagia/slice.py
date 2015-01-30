@@ -1,13 +1,13 @@
 import sys
-import os
 import re
-import shutil
-import traceback
+import logging
 
 import avmerge
+import export
 import sequence
 import audio_slice
 import pathutil
+import config
 
 _SECTION_PARSE = re.compile('(?P<begin>[^-]+)(-(?P<end>[^-]+)?)?')
 
@@ -26,22 +26,23 @@ def slice():
     begin_sec, end_sec = _sec_args()
     print 'Use sections', begin_sec, '->', end_sec
     try:
-        avmerge.merge_partial(begin_sec, end_sec)
+        avmerge.merge_partial(config.init_config(), begin_sec, end_sec)
     except sequence.ParseError, e:
-        traceback.print_exc()
+        logging.exception(e)
         print >> sys.stderr, e.linenum, ':', e.message, ':', e.content
 
 
 def inspect():
+    conf = config.init_config()
     begin_sec, end_sec = _sec_args()
     print 'Use sections', begin_sec, '->', end_sec
     try:
-        _, end_time, sections = avmerge.find_range(begin_sec, end_sec)
+        _, end_time, sections = avmerge.find_range(conf, begin_sec, end_sec)
         if len(sections) == 0:
             return
-        sliced_segs = avmerge.slice_partial(sections)
+        sliced_segs = avmerge.slice_partial(conf, sections)
     except sequence.ParseError, e:
-        traceback.print_exc()
+        logging.exception(e)
         print >> sys.stderr, e.linenum, ':', e.message, ':', e.content
         return
 
@@ -68,7 +69,7 @@ def inspect():
     next_section(0, 0, 0, 0)
 
 
-def export():
+def export_segs():
     if len(sys.argv) != 2:
         print >> sys.stderr, 'Args:'
         print >> sys.stderr, '    OUTPUT_DIRECTORY'
@@ -76,11 +77,8 @@ def export():
     if not pathutil.isdir(sys.argv[1]):
         print >> sys.stderr, sys.argv[1], 'is not a directory'
         return sys.exit(1)
-
     try:
-        files = avmerge.slice_partial(avmerge.find_range(':begin', ':end')[2])
+        export.export_to(config.init_config(), sys.argv[1])
     except sequence.ParseError, e:
-        traceback.print_exc()
+        logging.exception(e)
         print >> sys.stderr, e.linenum, ':', e.message, ':', e.content
-    for i, f in enumerate(files):
-        shutil.copy(f, os.path.join(sys.argv[1], 'mmexport_%03d.mp4' % i))

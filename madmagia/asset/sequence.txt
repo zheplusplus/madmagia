@@ -1,0 +1,12 @@
+# Sequence example file
+# Lines started with # will be ignored
+
+# Section example
+
+#         TIME    NAME      SUBTITLES (optional)
+#:section 01:00.0 section_a any text would be ok
+
+# Segment example
+
+# EPISODE TIME    DURATION
+#      01 00:02.0 4.0

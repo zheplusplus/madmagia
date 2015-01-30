@@ -2,10 +2,8 @@ import os
 import re
 from pydub import AudioSegment
 
-from config import config
 import pathutil
 import sequence
-import shell
 
 _DURATION_RE = re.compile('Duration: (?P<h>[0-9]+):(?P<m>[0-9]+):' +
                           r'(?P<s>[0-9]+\.[0-9]+)')
@@ -16,9 +14,9 @@ def audio_len(f):
     return len(AudioSegment.from_mp3(f)) / 10 / 100.0
 
 
-def _audio_from_to(input_file, ext, start, end, output_dir):
+def _audio_from_to(input_file, name, ext, start, end, output_dir):
     output_path = os.path.join(output_dir, ''.join([
-        'audio_', str(start), '-', str(end), ext]))
+        'audio_', name, '_', str(start), '-', str(end), ext]))
     if pathutil.isfile(output_path):
         return output_path
     AudioSegment.from_mp3(input_file)[
@@ -28,13 +26,14 @@ def _audio_from_to(input_file, ext, start, end, output_dir):
 
 def slice(input_file, start, end_time, output_dir=OUTPUT_DIR):
     pathname, ext = os.path.splitext(input_file)
-    return _audio_from_to(input_file, ext, start, end_time, output_dir)
+    return _audio_from_to(input_file, os.path.basename(pathname), ext,
+                          start, end_time, output_dir)
 
 
 def split(input_file, sequence_file):
     duration = audio_len(input_file)
     with open(sequence_file, 'r') as f:
-        sections = sequence.parse(f.readlines())[0]
+        sections = sequence.parse(f.readlines(), False)[0]
     pathname, ext = os.path.splitext(input_file)
     name = os.path.basename(pathname)
     last_sec = sections[0]

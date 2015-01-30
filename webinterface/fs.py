@@ -1,15 +1,10 @@
 import os
-import sys
-import json
 import shutil
 import string
 
 import app
 
-try:
-    import _winreg
-
-
+if os.name == 'nt':
     def _fs_roots():
         roots = []
         for i in xrange(24):
@@ -19,10 +14,9 @@ try:
             except WindowsError:
                 break
         return roots
-except ImportError:
+else:
     class WindowsError(OSError):
         pass
-
 
     def _fs_roots():
         return ['/']
