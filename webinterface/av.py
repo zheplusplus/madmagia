@@ -23,6 +23,10 @@ def _temp_dir(path):
     return d
 
 
+def _now_rep():
+    return datetime.now().strftime('%Y-%m-%d_%H%M%S')
+
+
 @app.get_async('/info/len/')
 def media_len(r):
     try:
@@ -87,7 +91,7 @@ def video_merge(r):
         audio_file, time_start, time_end, output_dir)
     return madmagia.avmerge.avmerge(
         {'avconv': app.avconv_path}, audio_seg, merged_video,
-        os.path.join(output_dir, 'output-%s.mp4' % datetime.now()), 'libx264')
+        os.path.join(output_dir, 'output_%s.mp4' % _now_rep()), 'libx264')
 
 
 @app.post_async('/video/slice_export')
@@ -113,7 +117,7 @@ def video_merge_export(r):
         audio_file, time_start, time_end, output_dir)
     return madmagia.avmerge.avmerge(
         {'avconv': app.avconv_path}, audio_seg, merged_video,
-        os.path.join(output_dir, 'output-%s.mp4' % datetime.now()))
+        os.path.join(output_dir, 'output-%s.mp4' % _now_rep()))
 
 
 @app.post_async('/frame/gen')

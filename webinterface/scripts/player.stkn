@@ -74,7 +74,7 @@ func section(sections, cb)
     jQuery('#play-section-sectotal').text(mad.formatTime(audioEnd - audioStart))
 
     segments: (sections |: $.segments()).reduce((x, y): x ++ y, [])
-    segTotal: (segments |: $.duration).reduce((x, y): x + y, 0)
+    segTotal: (segments |: $.elapse).reduce((x, y): x + y, 0)
     jQuery('#play-section-segtotal').text(mad.formatTime(segTotal))
 
     jQuery('#play-section-player').hide()

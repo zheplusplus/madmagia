@@ -32,6 +32,8 @@ window.mad.gettext = function(t) {
         new_section: '在此分节之后插入一个新分节',
         edit_section: '编辑此分节',
         del_section: '删除此分节',
+
+        segment_panel_title: '片段规格设置',
         new_segment: '在此加入一个片段',
         del: '删',
         seg_filter_fillspan: '拉伸/压缩视频长度至',
@@ -49,6 +51,8 @@ window.mad.gettext = function(t) {
         slicing_segment: '正在准备片段',
         merging_segments: '正在合并片段 请耐心等待',
         segments_exported: '视频已输出到本机硬盘',
+
+        about: '关于',
 
         '': ''
     }[t] || t;

@@ -192,7 +192,7 @@ p, span {
     background-color: #efe;
 }
 
-.mm-segment-del {
+.mm-elapse-label, .mm-segment-del {
     display: none;
 }
 
@@ -202,6 +202,13 @@ p, span {
     display: inline-block;
     margin-bottom: 6px;
     width: 36px;
+}
+
+.in-edit .mm-elapse-label {
+    line-height: 12px;
+    font-size: 0.8em;
+    display: inline-block;
+    max-width: 120px;
 }
 
 .mm-seg-el {
@@ -264,42 +271,49 @@ p, span {
     <table style='display: none; width: 100%' id='ws-panel'>
       <tr>
         <td id='ws-segs' style='width: 600px; vertical-align: top'></td>
-        <td id='ws-action' style='max-width: 200px; width: 200px; vertical-align: top'>
-          <button id='save-workspace' onclick='mad.workspace.save()' class='btn btn-primary input-block-level' style='height: 64px; font-size: 1.6em'>保存当前项目</button>
-          <div>
-            在预览/新建分节之后会自动保存
+        <td id='ws-action' style='vertical-align: top'>
+          <div style='max-width: 200px; width: 200px; position: fixed'>
+            <button id='save-workspace' onclick='mad.workspace.save()' class='btn btn-primary input-block-level' style='height: 64px; font-size: 1.6em'>保存当前项目</button>
+            <div>
+              在预览/新建分节之后会自动保存
+            </div>
+
+            <hr>
+
+            <div>
+              <label class='input-block-level'>
+                <input checked='checked' type='checkbox' id='play-section-auto-preview-cb'>
+                <span>当预览少于 30 秒的分节时自动在页面上播放</span>
+              </label>
+            </div>
+
+            <hr>
+
+            <button class='btn input-block-level collapse-trigger'>
+              音频信息
+            </button>
+            <div>
+              <p id='ws-audio-path'></p>
+              音频时长 <span id='ws-audio-len'></span>
+            </div>
+
+            <button class='btn input-block-level collapse-trigger'>
+              视频信息
+            </button>
+            <div>
+              视频目录 <span id='ws-video-path'></span>
+            </div>
+
+            <p style='margin-top: 40px'>
+                在变更输入视频目录, 调整视频文件编号等操作之后, 或当需要清理系统缓存目录时, 请点击以下按钮手动清除缓存文件
+            </p>
+            <button class='btn btn-danger clearcached input-block-level' onclick='mad.clearCached()' class='btn btn-primary'>清除所有缓存文件</button>
+
+            <hr>
+
+            <a href='http://zlo.gs/p/neuront/madmagia-publish' target='_blank'>使用手册</a>
+            <a href='javascript:mad.about.showAbout()' style='float: right'>关于</a>
           </div>
-
-          <hr>
-
-          <div>
-            <label class='input-block-level'>
-              <input checked='checked' type='checkbox' id='play-section-auto-preview-cb'>
-              <span>当预览少于 30 秒的分节时自动在页面上播放</span>
-            </label>
-          </div>
-
-          <hr>
-
-          <button class='btn input-block-level collapse-trigger'>
-            音频信息
-          </button>
-          <div>
-            <p id='ws-audio-path'></p>
-            音频时长 <span id='ws-audio-len'></span>
-          </div>
-
-          <button class='btn input-block-level collapse-trigger'>
-            视频信息
-          </button>
-          <div>
-            视频目录 <span id='ws-video-path'></span>
-          </div>
-
-          <p style='margin-top: 40px'>
-              在变更输入视频目录, 调整视频文件编号等操作之后, 或当需要清理系统缓存目录时, 请点击以下按钮手动清除缓存文件
-          </p>
-          <button class='btn btn-danger clearcached input-block-level' onclick='mad.clearCached()' class='btn btn-primary'>清除所有缓存文件</button>
         </td>
       </tr>
     </table>
@@ -308,26 +322,7 @@ p, span {
 
 <hr>
 
-<div style='width: 800px; margin: auto; background-color: #f5f5f5'>
-<pre style='display: inline-block; float: left'><code>________  _____  ______   ________  _____   ______ _____  _____
-|      | /     \ |     \  |      | /     \ |     | |   | /     \
-|      | |     | |     |  |      | |     | |  ___| |   | |     |
-|      | |  -  | |  D  |  |      | |  -  | | |   | |   | |  -  |
-|  | | | |  _  | |     |  |  | | | |  _  | |  -- | |   | |  _  |
-|__|_|_| |_| |_| |_____/  |__|_|_| |_| |_| |_____| |___| |_| |_|</code></pre>
-<div style='padding: 1em; float: right; line-height: 2.4em; text-align: right'>
-Alpha 测试版 <small>2015-01-25</small>
-<br>
-<a href='http://zlo.gs/p/neuront/madmagia-publish'>使用手册</a>
-<br>
-<a href='javascript:mad.about.showAbout()'>关于</a>
-</div>
-<hr>
-</div>
-
 <div id='edit-segment-panel' style='display: none'>
-    <h1 style='float: left; margin-left: 6px'>片段规格设置</h1>
-    <div style='float: right'><button id='edit-segment-quit' class='btn btn-danger'>X</button></div>
     <div style='clear: both'>节长度为 <span id='edit-section-duration'></span>s</div>
     <table style='width: 280px; max-width: 280px; margin: 6px; float: left'>
         <tr>
@@ -532,11 +527,14 @@ Alpha 测试版 <small>2015-01-25</small>
 </div>
 
 <div id='about-panel' style='display: none'>
-    <h1 style='float: left; margin-left: 6px'>关于</h1>
-    <div style='float: right'><button id='about-quit' class='btn btn-danger'>X</button></div>
-    <hr>
+    <pre style='text-align: center'><code>________  _____  ______   ________  _____   ______ _____  _____
+|      | /     \ |     \  |      | /     \ |     | |   | /     \
+|      | |     | |     |  |      | |     | |  ___| |   | |     |
+|      | |  -  | |  D  |  |      | |  -  | | |   | |   | |  -  |
+|  | | | |  _  | |     |  |  | | | |  _  | |  -- | |   | |  _  |
+|__|_|_| |_| |_| |_____/  |__|_|_| |_| |_| |_____| |___| |_| |_|</code></pre>
     <p style='text-align: center; font-size: 1.8em; margin-top: 1em'>
-    Madmagia 致力于构建一个简易的混剪视频编辑器.
+    Madmagia - 致力于构建一个简易的混剪视频编辑器
     <br>
     谢谢使用与反馈
     </p>
@@ -580,4 +578,6 @@ Alpha 测试版 <small>2015-01-25</small>
         </tr>
         </tbody>
     </table>
+    <hr>
+    <div style='text-align: center'>Beta 测试版 2015-02-10</div>
 </div>

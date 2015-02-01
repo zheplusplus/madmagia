@@ -6,6 +6,10 @@ FILTERS_DISPLAY: {
     fillspan: (time): [parseFloat(time)],
 }
 
+FILTERS_CHANGE_ELAPSE: {
+    fillspan: (duration, time): time,
+}
+
 func getAVLen(path, %%)
     jQuery.get('/info/len/', {path: path}, %r)
     return r
@@ -28,12 +32,14 @@ func newSegment(epnum, start, duration, filters, parent)
     epnumTag: jQuery('<span>').addClass('mm-seg-el')
     startTag: jQuery('<span>').addClass('mm-seg-el')
     durationTag: jQuery('<span>').addClass('mm-seg-el')
+    endingTag: jQuery('<small>').addClass('mm-seg-el')
     filtersArea: jQuery('<div>')
 
     div: jQuery('<div>').addClass('mm-segment').
                          append(epnumTag).
                          append(startTag).
                          append(durationTag).
+                         append(endingTag).
                          append(filtersArea).
                          click(():
                              if !jQuery(parent).hasClass('in-edit')
@@ -44,6 +50,7 @@ func newSegment(epnum, start, duration, filters, parent)
                                  %s)
                              if s
                                  set(s.epnum, s.start, s.duration, s.filters)
+                                 parent.refreshElapseLabels()
                          )[0]
 
     func set(epnum, start, duration, filters)
@@ -53,7 +60,9 @@ func newSegment(epnum, start, duration, filters, parent)
         startTag.text(mad.formatTime(start))
         div.duration: duration
         durationTag.text(duration)
+        endingTag.text('(- ' + mad.formatTime(start + duration) + ')')
         div.filters: filters
+        div.elapse: duration
         filtersArea.html('').append(filters |:
             fd: FILTERS_DISPLAY[$[0]]
             if fd
@@ -64,6 +73,9 @@ func newSegment(epnum, start, duration, filters, parent)
                     fd(args) |: f.append(jQuery('<span>').addClass('mm-seg-el').text($))
                     return f
                 ($[0], $[1]))
+            fcd: FILTERS_CHANGE_ELAPSE[$[0]]
+            if fcd
+                div.elapse: fcd(div.elapse, $[1])
         )
 
     set(epnum, start, duration, filters)
@@ -133,8 +145,24 @@ func newSection(name, start, sub)
         if trigger
             jQuery(s).insertAfter(trigger)
             delBtn.insertAfter(s)
-            return addSegmentButton().insertAfter(delBtn)
+            addSegmentButton().insertAfter(delBtn)
+            return sec.refreshElapseLabels()
         segsDiv.append(s).append(delBtn).append(addSegmentButton())
+
+    sec.refreshElapseLabels: ():
+        total: sec.duration()
+        totalRep: total.toFixed(3)
+        jQuery(sec).find('.mm-elapse-label').remove()
+        func refreshAt(i, sum, segments)
+            if i = segments.length
+                return
+            elapse: segments[i].elapse
+            jQuery(segments[i]).append(jQuery('<span>').addClass('mm-elapse-label').
+                                                        addClass('label').
+                                                        addClass('label-success').
+                                                        text([(sum + elapse).toFixed(3), totalRep, (sum + elapse - total).toFixed(3)].join('/')))
+            refreshAt(i + 1, sum + elapse, segments)
+        refreshAt(0, 0, @segments())
 
     unsetSelecting: (): jQuery('.mm-section').removeClass('mm-section-selecting')
     editEnable.click(():
@@ -253,6 +281,8 @@ getSequence(proj.getOutputPath(), %%) |:
     sec: newSection($.name, $.start, $.sub)
     segsCell.append(sec)
     $.segments |: sec.addSegment(newSegment($.epnum, $.start, $.duration, $.filters, sec))
+
+jQuery('.mm-section') |: $.refreshElapseLabels()
 
 jQuery('#save-workspace').show()
 
