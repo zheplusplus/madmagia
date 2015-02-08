@@ -54,8 +54,8 @@ def audio_slice(r):
     duration = float(r.form['duration'])
     output_dir = _temp_dir(r.form['output_dir'])
     try:
-        return madmagia.audio_slice.slice(
-            path, start, start + duration, output_dir)
+        return unicode(madmagia.audio_slice.slice(
+            path, start, start + duration, output_dir), app.PATH_ENCODING)
     except StandardError, e:
         logging.exception(e)
         return []

@@ -19,7 +19,7 @@ def _dump_section(sec):
     return {
         'name': sec.name,
         'start': sec.start,
-        'sub': sec.sub,
+        'sub': sec.sub.replace('\\n', '\n'),
         'segments': [_dump_segment(s) for s in sec.segments],
     }
 
@@ -63,7 +63,7 @@ def _write_segment(f, seg):
 def _write_section(f, sec):
     if sec['name'] != ':begin':
         print >> f, ':section', sec['start'], sec['name'].encode(
-            'utf-8'), sec.get('sub', '')
+            'utf-8'), sec.get('sub', '').replace('\n', '\\n').encode('utf-8')
     for s in sec['segments']:
         _write_segment(f, s)
     print >> f, ''

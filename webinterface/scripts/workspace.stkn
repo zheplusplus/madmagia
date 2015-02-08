@@ -292,6 +292,7 @@ func saveCurrentProjct()
         sections: JSON.stringify(jQuery('.mm-section') |: {
             name: $.name,
             start: $.start,
+            sub: $.sub,
             segments: $.segments() |: $.tojson()
         }),
     }, %r)

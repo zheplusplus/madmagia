@@ -128,17 +128,11 @@ jQuery('#edit-section-end-spanners .mm-time-spanner-btn').click(():
 )
 
 func editSection(section, prevSec, nextSec, audioPath, outputPath, cb)
-    editDiv: jQuery('#edit-section-panel').detach()
-    panel: mad.createOverlapPanel().append(editDiv.show())
+    panel: jQuery('#edit-section-panel').overlay({
+        title: _t_('section_panel_title'),
+    })
 
-    func quit(sec)
-        editDiv.detach()
-        jQuery(document.body).append(editDiv.hide())
-        panel.quit()
-        cb(sec)
-    jQuery('#edit-section-quit').unbind('click').click((): quit(null))
     jQuery('#edit-sec-error-feedback').text('')
-
     jQuery('#edit-prev-section-start').text(mad.formatTime(prevSec.start))
     nextStart: nextSec.start if nextSec else mad.workspace.audioLen()
     jQuery('#edit-next-section-start').text(mad.formatTime(nextStart))
@@ -195,11 +189,12 @@ func editSection(section, prevSec, nextSec, audioPath, outputPath, cb)
             return secError(secEndInput, _t_('edit_invalid_num'))
         if start < prevSec.start || start >= end || end > nextStart
             return secError(secStartInput, _t_('section_time_out_of_range'))
-        quit({
+        panel[0].quit()
+        cb({
             name: name,
             start: start,
             end: end,
-            sub: secSubInput.val()
+            sub: secSubInput.val(),
         })
     )
 

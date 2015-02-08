@@ -5,57 +5,57 @@ jQuery(document).ready(%)
 vplayer: jQuery('#play-video-panel video')[0]
 
 func video(src, cb)
-    videoDiv: jQuery('#play-video-panel').detach()
-    panel: mad.createOverlapPanel().append(videoDiv.show())
+    panel: jQuery('#play-video-panel').overlay({
+        title: _t_('play_video_title'),
+        onquit: ():
+            vplayer.src: ''
+            return true
+    })
 
-    func quit(time)
-        vplayer.src: ''
-        videoDiv.detach()
-        jQuery(document.body).append(videoDiv.hide())
-        panel.quit()
-        cb(time)
-
-    jQuery('#video-play-quit').unbind('click').click((): quit(null))
-    jQuery('#play-video-use-time').unbind('click').click((): quit(vplayer.currentTime))
+    jQuery('#play-video-use-time').unbind('click').click((): cb(vplayer.currentTime))
     vplayer.src: '/video/?path=' + encodeURIComponent(src)
 
 aplayer: jQuery('#play-audio-panel audio')[0]
 
 func audio(file, output_dir, start, duration)
-    audioDiv: jQuery('#play-audio-panel').detach()
-    panel: mad.createOverlapPanel().append(audioDiv.show())
-
-    func quit()
-        aplayer.src: ''
-        audioDiv.detach()
-        jQuery(document.body).append(audioDiv.hide())
-        panel.quit()
-
-    jQuery('#audio-play-quit').unbind('click').click((): quit())
+    panel: jQuery('#play-audio-panel').overlay({
+        title: _t_('play_video_title'),
+        onquit: ():
+            aplayer.src: ''
+            return true
+    })
 
     jQuery.post('/audio/slice', {file: file, start: start, duration: duration, output_dir: output_dir}, %r)
     aplayer.src: '/audio/?path=' + encodeURIComponent(r)
 
 secplayer: jQuery('#play-section-panel video')[0]
+secsub: jQuery('#play-section-sub').css('height', '5em').focus((): jQuery(@).css('height', '12em')).
+                                                         blur((): jQuery(@).css('height', '3em'))
+
+func genSectionsSub(sections, offset)
+    func fixTime(t)
+        return (t - offset).toFixed(2)
+    sections |:
+        if $.sub
+            secsub.append($i + 1).append('\n').
+                   append(fixTime($.start)).append(' --> ').append(fixTime($.end())).append('\n').
+                   append($.sub).append('\n').
+                   append('\n')
 
 func section(sections, cb)
-    avDiv: jQuery('#play-section-panel').detach()
-    panel: mad.createOverlapPanel().append(avDiv.show())
+    panel: jQuery('#play-section-panel').overlay({
+        title: _t_('play_section_title'),
+        onquit: ():
+            secplayer.src: ''
+            return true
+    })
     secplayer.src: ''
-
-    func quit()
-        secplayer.src: ''
-        avDiv.detach()
-        jQuery(document.body).append(avDiv.hide())
-        panel.quit()
-        cb()
-    jQuery('#section-play-quit').unbind('click').click((): quit())
 
     statusLabel: jQuery('#slicing-status').text('')
     statusLabel.error: false
 
     func sliceSegmentAndPush(segment, index, result, uri, %%)
-        if statusLabel.error || !panel.active
+        if statusLabel.error || !panel.data('active')
             return
         statusLabel.text(_t_('slicing_segment') + ' #' + index)
         jQuery.post(uri, {
@@ -69,6 +69,7 @@ func section(sections, cb)
         result.push(r)
 
     audioStart: sections[0].start
+    genSectionsSub(sections, audioStart)
     audioEnd: sections[sections.length - 1].end()
     jQuery('#play-section-pos').text(mad.formatTime(0) + ' / ' + mad.formatTime(audioStart))
     jQuery('#play-section-sectotal').text(mad.formatTime(audioEnd - audioStart))
@@ -84,7 +85,7 @@ func section(sections, cb)
         jQuery('#play-section-preview').parent().hide()
         seg_files: segments |:
             sliceSegmentAndPush($, $i, $result, '/video/slice', %%)
-        if statusLabel.error || !panel.active
+        if statusLabel.error || !panel.data('active')
             return
         statusLabel.text(_t_('merging_segments'))
         jQuery.post('/video/merge', {
@@ -94,7 +95,7 @@ func section(sections, cb)
             audio: mad.workspace.getAudioPath(),
             output_dir: mad.workspace.getOutputPath(),
         }, %r)
-        if statusLabel.error || !panel.active
+        if statusLabel.error || !panel.data('active')
             return
 
         jQuery('#play-section-player').show()
@@ -124,7 +125,7 @@ func section(sections, cb)
             jQuery(@).parent().hide()
             seg_files: segments |:
                 sliceSegmentAndPush($, $i, $result, '/video/slice_export', %%)
-            if statusLabel.error || !panel.active
+            if statusLabel.error || !panel.data('active')
                 return
             statusLabel.text(_t_('merging_segments'))
             jQuery.post('/video/merge_export', {

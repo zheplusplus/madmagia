@@ -23,6 +23,7 @@ window.mad.gettext = function(t) {
         empty_output_dir: '请返回项目面板为此项目指定一个输出目录',
         bad_output_dir: '无法在指定的输出目录下找到或新建项目文件, 请返回项目面板重新选取',
 
+        section_panel_title: '音频分节编辑',
         section_enable_edit: '编辑分节',
         section_disable_edit: '预览分节',
         play_section_audio: '播放此分节内音频',
@@ -53,6 +54,9 @@ window.mad.gettext = function(t) {
         segments_exported: '视频已输出到本机硬盘',
 
         about: '关于',
+        play_video_title: '播放视频',
+        play_audio_title: '播放音频',
+        play_section_title: '播放分节',
 
         '': ''
     }[t] || t;

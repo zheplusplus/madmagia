@@ -14,14 +14,14 @@ func createOverlapPanel()
     return panel
 
 func selectDiskObj(initPath, dirOnly, cb)
-    panel: createOverlapPanel()
+    panel: jQuery('<div>')
+    overlay: panel.overlay()
     pathList: jQuery('<ol>').addClass('breadcrumb').css({float: 'left'})
     pathList.currentPaths: []
     panel.append(pathList)
-    panel.append(mad.createButton('X').click(quit).addClass('btn-danger').css({float: 'right'}))
 
     if dirOnly
-        panel.append(mad.createPriButton(_t_('select_current_dir')).click(select).css({float: 'right', 'margin-right': 6}))
+        panel.append(mad.createPriButton(_t_('select_current_dir')).click(select).css({float: 'right'}))
 
     panel.append(mad.createCentralPara(_t_('hint_ctrl_f_file')).css({clear: 'both'}))
 
@@ -40,11 +40,8 @@ func selectDiskObj(initPath, dirOnly, cb)
     fileArea: jQuery('<div>')
     panel.append(fileArea)
 
-    func quit()
-        panel.quit()
-
     func select()
-        quit()
+        overlay[0].quit()
         cb(pathList.currentPaths.join('/'))
 
     func usePaths(paths)
